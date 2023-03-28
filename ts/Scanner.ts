@@ -3,6 +3,27 @@ import Token, { literal } from "./Token.js";
 import { TokenType } from "./TokenType.js";
 
 export default class Scanner {
+  private static readonly keywords: { [key: string]: TokenType } = {};
+
+  static {
+    this.keywords["and"] = TokenType.AND;
+    this.keywords["class"] = TokenType.CLASS;
+    this.keywords["else"] = TokenType.ELSE;
+    this.keywords["false"] = TokenType.FALSE;
+    this.keywords["for"] = TokenType.FOR;
+    this.keywords["fun"] = TokenType.FUN;
+    this.keywords["if"] = TokenType.IF;
+    this.keywords["nil"] = TokenType.NIL;
+    this.keywords["or"] = TokenType.OR;
+    this.keywords["print"] = TokenType.PRINT;
+    this.keywords["return"] = TokenType.RETURN;
+    this.keywords["super"] = TokenType.SUPER;
+    this.keywords["this"] = TokenType.THIS;
+    this.keywords["true"] = TokenType.TRUE;
+    this.keywords["var"] = TokenType.VAR;
+    this.keywords["while"] = TokenType.WHILE;
+  }
+
   private readonly source: string;
   private readonly tokens: Token[] = [];
   private start: number = 0;
@@ -23,8 +44,10 @@ export default class Scanner {
     return this.tokens;
   }
 
-  private scanToken() {
-    switch (this.advance()) {
+  private scanToken(): void {
+    const c = this.advance();
+
+    switch (c) {
       case "(":
         return this.addToken(TokenType.LEFT_PAREN);
       case ")":
@@ -53,9 +76,72 @@ export default class Scanner {
         return this.addToken(this.match("=") ? TokenType.LESS_EQUAL : TokenType.LESS);
       case ">":
         return this.addToken(this.match("=") ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+      case "/":
+        if (this.match("/")) {
+          // A comment goes until the end of the line
+          while (this.peek() != "\n" && !this.isAtEnd()) this.advance();
+        } else {
+          this.addToken(TokenType.SLASH);
+        }
+
+        break;
+
+      case " ":
+      case "\r":
+      case "\t":
+        // Ignore whitespace
+        break;
+
+      case "\n":
+        this.line++;
+        break;
+
+      case '"':
+        return this.string();
+
       default:
+        if (this.isDigit(c)) return this.number();
+        if (this.isAlpha(c)) return this.identifier();
         return Lox.error(this.line, "Unexpexted character.");
     }
+  }
+
+  private identifier(): void {
+    while (this.isAlphaNumeric(this.peek())) this.advance();
+
+    const text = this.source.substring(this.start, this.current);
+
+    this.addToken(Scanner.keywords[text] || TokenType.IDENTIFIER);
+  }
+
+  private number(): void {
+    while (this.isDigit(this.peek())) this.advance();
+
+    // Look for a fractional part
+    if (this.peek() == "." && this.isDigit(this.peekNext())) {
+      // Consume the `.`
+      this.advance();
+
+      while (this.isDigit(this.peek())) this.advance();
+    }
+
+    this.addToken(TokenType.NUMBER, parseFloat(this.source.substring(this.start, this.current)));
+  }
+
+  private string(): void {
+    while (this.peek() != '"' && !this.isAtEnd()) {
+      if (this.peek() == "\n") this.line++;
+      this.advance();
+    }
+
+    if (this.isAtEnd()) return Lox.error(this.line, "Unterminated string.");
+
+    // The closing `"`
+    this.advance();
+
+    // Trim the surrounding quotes
+    const value = this.source.substring(this.start + 1, this.current - 1);
+    this.addToken(TokenType.STRING, value);
   }
 
   private match(expected: string): boolean {
@@ -66,6 +152,28 @@ export default class Scanner {
     return true;
   }
 
+  private peek(): string {
+    if (this.isAtEnd()) return "\0";
+    return this.source.charAt(this.current);
+  }
+
+  private peekNext(): string {
+    if (this.current + 1 >= this.source.length) return "\0";
+    return this.source.charAt(this.current + 1);
+  }
+
+  private isAlpha(c: string): boolean {
+    return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c == "_";
+  }
+
+  private isAlphaNumeric(c: string): boolean {
+    return this.isAlpha(c) || this.isDigit(c);
+  }
+
+  private isDigit(c: string): boolean {
+    return c >= "0" && c <= "9";
+  }
+
   private isAtEnd(): boolean {
     return this.current >= this.source.length;
   }
@@ -74,8 +182,8 @@ export default class Scanner {
     return this.source.charAt(this.current++);
   }
 
-  private addToken(type: TokenType, literal: literal = null) {
+  private addToken(tokenType: TokenType, literal: literal = null) {
     const text = this.source.substring(this.start, this.current);
-    this.tokens.push(new Token(type, text, literal, this.line));
+    this.tokens.push(new Token(tokenType, text, literal, this.line));
   }
 }

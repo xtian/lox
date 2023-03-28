@@ -1,6 +1,6 @@
 import { TokenType } from "./TokenType.js";
 
-export type literal = object | null;
+export type literal = unknown;
 
 export default class Token {
   readonly type: TokenType;

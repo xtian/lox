@@ -1,5 +1,5 @@
 export const enum TokenType {
-  // Single-character tokens.
+  // Single-character tokens
   LEFT_PAREN,
   RIGHT_PAREN,
   LEFT_BRACE,
@@ -12,7 +12,7 @@ export const enum TokenType {
   SLASH,
   STAR,
 
-  // One or two character tokens.
+  // One or two character tokens
   BANG,
   BANG_EQUAL,
   EQUAL,
@@ -22,12 +22,12 @@ export const enum TokenType {
   LESS,
   LESS_EQUAL,
 
-  // Literals.
+  // Literals
   IDENTIFIER,
   STRING,
   NUMBER,
 
-  // Keywords.
+  // Keywords
   AND,
   CLASS,
   ELSE,

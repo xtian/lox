@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { argv, exit } from "node:process";
-import Scanner from "./scanner.js";
+import Scanner from "./Scanner.js";
 
 export default class Lox {
   static hadError: boolean = false;
@@ -21,7 +21,7 @@ export default class Lox {
     const fileContents = await Bun.file(path).text();
     this.run(fileContents);
 
-    // Indicate an error in the exit code.
+    // Indicate an error in the exit code
     if (this.hadError) exit(65);
   }
 
@@ -37,10 +37,7 @@ export default class Lox {
   }
 
   private static run(source: string): void {
-    const scanner = new Scanner(source);
-    const tokens = scanner.scanTokens();
-
-    for (const token of tokens) {
+    for (const token of new Scanner(source).scanTokens()) {
       console.log(token);
     }
   }

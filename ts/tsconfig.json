@@ -16,7 +16,7 @@
     "esModuleInterop": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": false,
     "noImplicitOverride": true,
     "noImplicitReturns": false,
     "noPropertyAccessFromIndexSignature": true,
