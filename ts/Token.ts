@@ -1,12 +1,14 @@
 import { TokenType } from "./TokenType.js";
 
+export type literal = object | null;
+
 export default class Token {
   readonly type: TokenType;
   readonly lexeme: string;
-  readonly literal: object;
+  readonly literal: literal;
   readonly line: number;
 
-  constructor(type: TokenType, lexeme: string, literal: object, line: number) {
+  constructor(type: TokenType, lexeme: string, literal: literal, line: number) {
     this.type = type;
     this.lexeme = lexeme;
     this.literal = literal;
