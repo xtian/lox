@@ -1,6 +1,5 @@
 import Lox from "./lox.js";
-import Token, { literal } from "./Token.js";
-import { TokenType } from "./TokenType.js";
+import Token, { TokenType } from "./Token.js";
 
 export default class Scanner {
   private static readonly keywords: { [key: string]: TokenType } = {};
@@ -182,7 +181,7 @@ export default class Scanner {
     return this.source.charAt(this.current++);
   }
 
-  private addToken(tokenType: TokenType, literal: literal = null) {
+  private addToken(tokenType: TokenType, literal: unknown = null) {
     const text = this.source.substring(this.start, this.current);
     this.tokens.push(new Token(tokenType, text, literal, this.line));
   }
