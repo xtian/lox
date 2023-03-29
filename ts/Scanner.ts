@@ -101,7 +101,7 @@ export default class Scanner {
       default:
         if (this.isDigit(c)) return this.number();
         if (this.isAlpha(c)) return this.identifier();
-        return Lox.error(this.line, "Unexpexted character.");
+        return Lox.error(this.line, "Unexpected character.");
     }
   }
 

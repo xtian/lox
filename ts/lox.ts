@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
 
 import { argv, exit } from "node:process";
+import AstPrinter from "./AstPrinter.js";
+import Parser from "./Parser.js";
 import Scanner from "./Scanner.js";
+import Token, { TokenType } from "./Token.js";
 
 export default class Lox {
   static hadError: boolean = false;
@@ -37,18 +40,34 @@ export default class Lox {
   }
 
   private static run(source: string): void {
-    for (const token of new Scanner(source).scanTokens()) {
-      console.log(token);
-    }
-  }
+    const tokens = new Scanner(source).scanTokens();
+    const expression = new Parser(tokens).parse();
 
-  static error(line: number, message: string): void {
-    this.report(line, "", message);
+    // Stop if there was a syntax error
+    if (this.hadError || !expression) return;
+
+    console.log(new AstPrinter().print(expression));
   }
 
   private static report(line: number, where: string, message: string): void {
     console.error(`[line ${line}] Error${where}: ${message}`);
     this.hadError = true;
+  }
+
+  static error(value: Token | number, message: string): void {
+    if (value instanceof Token) {
+      const token = value;
+
+      if (token.type == TokenType.EOF) {
+        this.report(token.line, " at end", message);
+      } else {
+        this.report(token.line, ` at '${token.lexeme}'`, message);
+      }
+    } else {
+      const line = value;
+
+      this.report(line, "", message);
+    }
   }
 }
 

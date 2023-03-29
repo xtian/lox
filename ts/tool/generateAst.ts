@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { argv, exit } from "node:process";
 import { createWriteStream, WriteStream } from "node:fs";
+import { argv, exit } from "node:process";
 
 class GenerateAst {
   static main(args: string[]): void {

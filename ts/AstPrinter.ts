@@ -1,6 +1,8 @@
-import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./Expr.js";
+import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
 
-export class AstPrinter implements Visitor<string> {
+import type { Visitor } from "./Expr.js";
+
+export default class AstPrinter implements Visitor<string> {
   print(expr: Expr): string {
     return expr.accept(this);
   }
