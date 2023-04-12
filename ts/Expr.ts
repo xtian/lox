@@ -44,9 +44,9 @@ export class Grouping extends Expr {
 }
 
 export class Literal extends Expr {
-  readonly value: unknown;
+  readonly value: any;
 
-  constructor(value: unknown) {
+  constructor(value: any) {
     super();
 
     this.value = value;

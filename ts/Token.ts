@@ -51,10 +51,10 @@ export const enum TokenType {
 export default class Token {
   readonly type: TokenType;
   readonly lexeme: string;
-  readonly literal: unknown;
+  readonly literal: any;
   readonly line: number;
 
-  constructor(type: TokenType, lexeme: string, literal: unknown, line: number) {
+  constructor(type: TokenType, lexeme: string, literal: any, line: number) {
     this.type = type;
     this.lexeme = lexeme;
     this.literal = literal;

@@ -181,7 +181,7 @@ export default class Scanner {
     return this.source.charAt(this.current++);
   }
 
-  private addToken(tokenType: TokenType, literal: unknown = null) {
+  private addToken(tokenType: TokenType, literal: any = null) {
     const text = this.source.substring(this.start, this.current);
     this.tokens.push(new Token(tokenType, text, literal, this.line));
   }

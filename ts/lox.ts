@@ -1,13 +1,16 @@
 #!/usr/bin/env bun
 
 import { argv, exit } from "node:process";
-import AstPrinter from "./AstPrinter.js";
+import Interpreter from "./Interpreter.js";
 import Parser from "./Parser.js";
+import RuntimeError from "./RuntimeError.js";
 import Scanner from "./Scanner.js";
 import Token, { TokenType } from "./Token.js";
 
 export default class Lox {
+  private static readonly interpreter: Interpreter = new Interpreter();
   static hadError: boolean = false;
+  static hadRuntimeError: boolean = false;
 
   static async main(args: string[]): Promise<void> {
     if (args.length > 1) {
@@ -26,6 +29,7 @@ export default class Lox {
 
     // Indicate an error in the exit code
     if (this.hadError) exit(65);
+    if (this.hadRuntimeError) exit(70);
   }
 
   private static async runPrompt(): Promise<void> {
@@ -46,7 +50,7 @@ export default class Lox {
     // Stop if there was a syntax error
     if (this.hadError || !expression) return;
 
-    console.log(new AstPrinter().print(expression));
+    this.interpreter.interpret(expression);
   }
 
   private static report(line: number, where: string, message: string): void {
@@ -68,6 +72,11 @@ export default class Lox {
 
       this.report(line, "", message);
     }
+  }
+
+  static runtimeError(error: RuntimeError): void {
+    console.error(`${error.message}\n[line ${error.token.line}]`);
+    this.hadRuntimeError = true;
   }
 }
 

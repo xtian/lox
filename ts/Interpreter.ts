@@ -1,11 +1,23 @@
 import assert from "node:assert";
 import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
-import { TokenType } from "./Token.js";
+import Lox from "./lox.js";
+import RuntimeError from "./RuntimeError.js";
+import Token, { TokenType } from "./Token.js";
 
 import type { Visitor } from "./Expr.js";
 
-export default class Interpreter implements Visitor<unknown> {
-  public visitBinaryExpr(expr: Binary): unknown {
+export default class Interpreter implements Visitor<any> {
+  public interpret(expression: Expr): void {
+    try {
+      const value = this.evaluate(expression);
+      console.log(this.stringify(value));
+    } catch (error) {
+      if (error instanceof RuntimeError) return Lox.runtimeError(error);
+      throw error;
+    }
+  }
+
+  public visitBinaryExpr(expr: Binary): any {
     const left = this.evaluate(expr.left);
     const right = this.evaluate(expr.right);
 
@@ -17,79 +29,89 @@ export default class Interpreter implements Visitor<unknown> {
         return this.isEqual(left, right);
 
       case TokenType.GREATER:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left > right;
 
       case TokenType.GREATER_EQUAL:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left >= right;
 
       case TokenType.LESS:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left < right;
 
       case TokenType.LESS_EQUAL:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left <= right;
 
       case TokenType.MINUS:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left - right;
 
       case TokenType.PLUS:
-        if (typeof left !== "string" || typeof left !== "number") break;
-        if (typeof right !== "string" || typeof right !== "number") break;
-        if (typeof left !== typeof right) break;
+        if (typeof left === "number" && typeof right === "number") return left + right;
+        if (typeof left === "string" && typeof right === "string") return left + right;
 
-        return left + right;
+        throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings");
 
       case TokenType.SLASH:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left / right;
 
       case TokenType.STAR:
-        assert(typeof left === "number" && typeof right === "number");
+        this.checkNumberOperands(expr.operator, left, right);
         return left * right;
     }
 
     assert(false);
   }
 
-  public visitGroupingExpr(expr: Grouping): unknown {
+  public visitGroupingExpr(expr: Grouping): any {
     return this.evaluate(expr.expression);
   }
 
-  public visitLiteralExpr(expr: Literal): unknown {
+  public visitLiteralExpr(expr: Literal): any {
     return expr.value;
   }
 
-  public visitUnaryExpr(expr: Unary): unknown {
+  public visitUnaryExpr(expr: Unary): any {
     const right = this.evaluate(expr.right);
 
     switch (expr.operator.type) {
       case TokenType.BANG:
         return !this.isTruthy(right);
       case TokenType.MINUS:
-        assert(typeof right === "number");
+        this.checkNumberOperands(expr.operator, right);
         return -right;
     }
 
     assert(false);
   }
 
-  private isTruthy(value: unknown): boolean {
+  private checkNumberOperands(operator: Token, ...operands: any[]): void {
+    if (operands.every((o) => typeof o === "number")) return;
+    if (operands.length > 1) throw new RuntimeError(operator, "Operands must be numbers.");
+    throw new RuntimeError(operator, "Operand must be a number.");
+  }
+
+  private isTruthy(value: any): boolean {
     if (value == null) return false;
     if (typeof value === "boolean") return value;
 
     return true;
   }
 
-  private isEqual(a: unknown, b: unknown): boolean {
+  private isEqual(a: any, b: any): boolean {
     if (a == null && b == null) return true;
     return a === b;
   }
 
-  private evaluate(expr: Expr): unknown {
+  private stringify(object: any): string {
+    if (object == null) return "nil";
+    return object.toString();
+  }
+
+  private evaluate(expr: Expr): any {
     return expr.accept(this);
   }
 }
