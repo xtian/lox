@@ -1,18 +1,22 @@
 import assert from "node:assert";
+import Environment from "./Environment.js";
 import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
 import Lox from "./lox.js";
 import RuntimeError from "./RuntimeError.js";
 import { Token, TokenType } from "./Token.js";
 
-import type { Visitor as ExprVisitor } from "./Expr.js";
+import type { Variable as ExprVariable, Visitor as ExprVisitor } from "./Expr.js";
 import type {
   Expression as StmtExpression,
   Print as StmtPrint,
   Stmt,
+  Var as StmtVar,
   Visitor as StmtVisitor,
 } from "./Stmt.js";
 
 export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> {
+  private environment: Environment = new Environment();
+
   public interpret(statements: Stmt[]): void {
     try {
       for (const statement of statements) this.execute(statement);
@@ -93,6 +97,10 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     assert(false);
   }
 
+  public visitVariableExpr(expr: ExprVariable): any {
+    return this.environment.get(expr.name);
+  }
+
   private checkNumberOperands(operator: Token, ...operands: any[]): void {
     if (operands.every((o) => typeof o === "number")) return;
     if (operands.length > 1) throw new RuntimeError(operator, "Operands must be numbers.");
@@ -131,5 +139,12 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
   public visitPrintStmt(stmt: StmtPrint): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
+  }
+
+  public visitVarStmt(stmt: StmtVar): void {
+    let value = null;
+    if (stmt.initializer != null) value = this.evaluate(stmt.initializer);
+
+    this.environment.define(stmt.name.lexeme, value);
   }
 }
