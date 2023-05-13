@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import Lox from "./lox.js";
 import { Assign, Binary, Expr, Variable, Grouping, Literal, Unary } from "./Expr.js";
-import { Expression as StmtExpression, Print, Stmt, Var } from "./Stmt.js";
+import { Block, Expression as StmtExpression, Print, Stmt, Var } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
 import type { Token } from "./Token.js";
@@ -43,6 +43,8 @@ export default class Parser {
 
   private statement(): Stmt {
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
+
     return this.expressionStatement();
   }
 
@@ -66,6 +68,18 @@ export default class Parser {
     const expr = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new StmtExpression(expr);
+  }
+
+  private block(): Stmt[] {
+    const statements = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      const statement = this.declaration();
+      if (statement) statements.push(statement);
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
   }
 
   private assignment(): Expr {

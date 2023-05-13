@@ -7,8 +7,9 @@ import { Token, TokenType } from "./Token.js";
 
 import type { Variable as ExprVariable, Visitor as ExprVisitor } from "./Expr.js";
 import type {
+  Block,
   Expression as StmtExpression,
-  Print as StmtPrint,
+  Print,
   Stmt,
   Var as StmtVar,
   Visitor as StmtVisitor,
@@ -132,11 +133,26 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     stmt.accept(this);
   }
 
+  private executeBlock(statements: Stmt[], environment: Environment): void {
+    const previous = this.environment;
+
+    try {
+      this.environment = environment;
+      for (const statement of statements) this.execute(statement);
+    } finally {
+      this.environment = previous;
+    }
+  }
+
+  public visitBlockStmt(stmt: Block): void {
+    this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
   public visitExpressionStmt(stmt: StmtExpression): void {
     this.evaluate(stmt.expression);
   }
 
-  public visitPrintStmt(stmt: StmtPrint): void {
+  public visitPrintStmt(stmt: Print): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
   }

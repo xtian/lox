@@ -31,6 +31,7 @@ class GenerateAst {
       "Stmt",
       ["Expr", "Token"],
       [
+        ["Block", "statements: Stmt[]"],
         ["Expression", "expression: Expr"],
         ["Print", "expression: Expr"],
         ["Var", "name: Token, initializer: Expr | null"],
