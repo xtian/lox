@@ -1,7 +1,7 @@
 import assert from "node:assert";
-import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
+import { Binary, Expr, Variable as ExprVariable, Grouping, Literal, Unary } from "./Expr.js";
 import Lox from "./lox.js";
-import { Expression as StmtExpression, Stmt, Print } from "./Stmt.js";
+import { Expression as StmtExpression, Print, Stmt, Var } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
 import type { Token } from "./Token.js";
@@ -19,13 +19,26 @@ export default class Parser {
   parse(): Stmt[] {
     const statements = [];
 
-    while (!this.isAtEnd()) statements.push(this.statement());
+    while (!this.isAtEnd()) {
+      const statement = this.declaration();
+      if (statement) statements.push(statement);
+    }
 
     return statements;
   }
 
   private expression(): Expr {
     return this.equality();
+  }
+
+  private declaration(): Stmt | void {
+    try {
+      if (this.match(TokenType.VAR)) return this.varDeclaration();
+      return this.statement();
+    } catch (error) {
+      if (error instanceof ParseError) return this.synchronize();
+      throw error;
+    }
   }
 
   private statement(): Stmt {
@@ -37,6 +50,16 @@ export default class Parser {
     const value = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new Print(value);
+  }
+
+  private varDeclaration(): Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+    let initializer = null;
+    if (this.match(TokenType.EQUAL)) initializer = this.expression();
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+    return new Var(name, initializer);
   }
 
   private expressionStatement(): Stmt {
@@ -115,6 +138,7 @@ export default class Parser {
     if (this.match(TokenType.TRUE)) return new Literal(true);
     if (this.match(TokenType.NIL)) return new Literal(null);
     if (this.match(TokenType.NUMBER, TokenType.STRING)) return new Literal(this.previous().literal);
+    if (this.match(TokenType.IDENTIFIER)) return new ExprVariable(this.previous());
 
     if (this.match(TokenType.LEFT_PAREN)) {
       const expr = this.expression();
