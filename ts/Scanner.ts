@@ -1,5 +1,5 @@
 import Lox from "./lox.js";
-import Token, { TokenType } from "./Token.js";
+import { Token, TokenType } from "./Token.js";
 
 export default class Scanner {
   private static readonly keywords: { [key: string]: TokenType } = {};

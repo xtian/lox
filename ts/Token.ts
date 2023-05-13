@@ -48,7 +48,7 @@ export const enum TokenType {
   EOF,
 }
 
-export default class Token {
+export class Token {
   readonly type: TokenType;
   readonly lexeme: string;
   readonly literal: any;

@@ -12,19 +12,43 @@ class GenerateAst {
 
     const outputDir = args[0];
 
-    this.defineAst(outputDir, "Expr", [
-      ["Binary", "left: Expr, operator: Token, right: Expr"],
-      ["Grouping", "expression: Expr"],
-      ["Literal", "value: any"],
-      ["Unary", "operator: Token, right: Expr"],
-    ]);
+    this.defineAst(
+      outputDir,
+      "Expr",
+      ["Token"],
+      [
+        ["Binary", "left: Expr, operator: Token, right: Expr"],
+        ["Grouping", "expression: Expr"],
+        ["Literal", "value: any"],
+        ["Unary", "operator: Token, right: Expr"],
+      ]
+    );
+
+    this.defineAst(
+      outputDir,
+      "Stmt",
+      ["Expr"],
+      [
+        ["Expression", "expression: Expr"],
+        ["Print", "expression: Expr"],
+      ]
+    );
   }
 
-  private static defineAst(outputDir: string, baseName: string, types: [string, string][]): void {
+  private static defineAst(
+    outputDir: string,
+    baseName: string,
+    imports: string[],
+    types: [string, string][]
+  ): void {
     const path = `${outputDir}/${baseName}.ts`;
     const writer = createWriteStream(path);
 
-    writer.write('import Token from "./Token.js";\n\n');
+    for (const name of imports) {
+      writer.write(`import type { ${name} } from "./${name}.js";\n`);
+    }
+
+    if (imports.length > 0) writer.write("\n");
 
     writer.write(`export abstract class ${baseName} {\n`);
     writer.write("  abstract accept<R>(visitor: Visitor<R>): R;\n");
@@ -48,7 +72,7 @@ class GenerateAst {
   ): void {
     writer.write(`\nexport interface Visitor<R> {\n`);
 
-    for (const [typeName, _fields] of types) {
+    for (const [typeName] of types) {
       writer.write(`  visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): R;\n`);
     }
 
@@ -78,7 +102,7 @@ class GenerateAst {
 
     // Store parameters in fields
     for (const field of fields) {
-      const [name, _typeName] = field.split(": ");
+      const name = field.split(": ")[0];
       writer.write(`    this.${name} = ${name};\n`);
     }
 

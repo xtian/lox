@@ -1,4 +1,4 @@
-import type Token from "./Token.js";
+import type { Token } from "./Token.js";
 
 export abstract class Expr {
   abstract accept<R>(visitor: Visitor<R>): R;

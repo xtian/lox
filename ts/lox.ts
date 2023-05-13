@@ -5,7 +5,7 @@ import Interpreter from "./Interpreter.js";
 import Parser from "./Parser.js";
 import RuntimeError from "./RuntimeError.js";
 import Scanner from "./Scanner.js";
-import Token, { TokenType } from "./Token.js";
+import { Token, TokenType } from "./Token.js";
 
 export default class Lox {
   private static readonly interpreter: Interpreter = new Interpreter();
@@ -45,12 +45,12 @@ export default class Lox {
 
   private static run(source: string): void {
     const tokens = new Scanner(source).scanTokens();
-    const expression = new Parser(tokens).parse();
+    const statements = new Parser(tokens).parse();
 
     // Stop if there was a syntax error
-    if (this.hadError || !expression) return;
+    if (this.hadError) return;
 
-    this.interpreter.interpret(expression);
+    this.interpreter.interpret(statements);
   }
 
   private static report(line: number, where: string, message: string): void {

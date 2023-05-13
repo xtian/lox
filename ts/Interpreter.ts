@@ -2,15 +2,20 @@ import assert from "node:assert";
 import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
 import Lox from "./lox.js";
 import RuntimeError from "./RuntimeError.js";
-import Token, { TokenType } from "./Token.js";
+import { Token, TokenType } from "./Token.js";
 
-import type { Visitor } from "./Expr.js";
+import type { Visitor as ExprVisitor } from "./Expr.js";
+import type {
+  Expression as StmtExpression,
+  Print as StmtPrint,
+  Stmt,
+  Visitor as StmtVisitor,
+} from "./Stmt.js";
 
-export default class Interpreter implements Visitor<any> {
-  public interpret(expression: Expr): void {
+export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> {
+  public interpret(statements: Stmt[]): void {
     try {
-      const value = this.evaluate(expression);
-      console.log(this.stringify(value));
+      for (const statement of statements) this.execute(statement);
     } catch (error) {
       if (error instanceof RuntimeError) return Lox.runtimeError(error);
       throw error;
@@ -113,5 +118,18 @@ export default class Interpreter implements Visitor<any> {
 
   private evaluate(expr: Expr): any {
     return expr.accept(this);
+  }
+
+  private execute(stmt: Stmt): void {
+    stmt.accept(this);
+  }
+
+  public visitExpressionStmt(stmt: StmtExpression): void {
+    this.evaluate(stmt.expression);
+  }
+
+  public visitPrintStmt(stmt: StmtPrint): void {
+    const value = this.evaluate(stmt.expression);
+    console.log(this.stringify(value));
   }
 }
