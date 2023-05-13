@@ -9,6 +9,7 @@ import type { Variable as ExprVariable, Visitor as ExprVisitor } from "./Expr.js
 import type {
   Block,
   Expression as StmtExpression,
+  If,
   Print,
   Stmt,
   Var as StmtVar,
@@ -150,6 +151,14 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   public visitExpressionStmt(stmt: StmtExpression): void {
     this.evaluate(stmt.expression);
+  }
+
+  public visitIfStmt(stmt: If): void {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      this.execute(stmt.elseBranch);
+    }
   }
 
   public visitPrintStmt(stmt: Print): void {

@@ -1,10 +1,10 @@
 import assert from "node:assert";
 import Lox from "./lox.js";
 import { Assign, Binary, Expr, Variable, Grouping, Literal, Unary } from "./Expr.js";
-import { Block, Expression as StmtExpression, Print, Stmt, Var } from "./Stmt.js";
+import { Block, Expression as StmtExpression, If, Print, Stmt, Var } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
-import type { Token } from "./Token.js";
+import { Token } from "./Token.js";
 
 class ParseError extends Error {}
 
@@ -42,10 +42,24 @@ export default class Parser {
   }
 
   private statement(): Stmt {
+    if (this.match(TokenType.IF)) return this.ifStatement();
     if (this.match(TokenType.PRINT)) return this.printStatement();
     if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
 
     return this.expressionStatement();
+  }
+
+  private ifStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+    const thenBranch = this.statement();
+
+    let elseBranch = null;
+    if (this.match(TokenType.ELSE)) elseBranch = this.statement();
+
+    return new If(condition, thenBranch, elseBranch);
   }
 
   private printStatement(): Stmt {
