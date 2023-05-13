@@ -123,6 +123,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   private stringify(object: any): string {
     if (object == null) return "nil";
+    if (typeof object === "string") return `"${object}"`;
     return object.toString();
   }
 
