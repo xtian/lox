@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import Lox from "./lox.js";
-import { Assign, Binary, Expr, Variable, Grouping, Literal, Unary } from "./Expr.js";
+import { Assign, Binary, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import { Block, Expression as StmtExpression, If, Print, Stmt, Var } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
@@ -97,7 +97,7 @@ export default class Parser {
   }
 
   private assignment(): Expr {
-    const expr = this.equality();
+    const expr = this.or();
 
     if (this.match(TokenType.EQUAL)) {
       const equals = this.previous();
@@ -106,6 +106,30 @@ export default class Parser {
       if (expr instanceof Variable) return new Assign(expr.name, value);
 
       this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private or(): Expr {
+    let expr = this.and();
+
+    while (this.match(TokenType.OR)) {
+      const operator = this.previous();
+      const right = this.and();
+      expr = new Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private and(): Expr {
+    let expr = this.equality();
+
+    while (this.match(TokenType.AND)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = new Logical(expr, operator, right);
     }
 
     return expr;

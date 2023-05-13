@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import Environment from "./Environment.js";
-import { Assign, Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
+import { Assign, Binary, Expr, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import Lox from "./lox.js";
 import RuntimeError from "./RuntimeError.js";
 import { Token, TokenType } from "./Token.js";
@@ -83,6 +83,18 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   public visitLiteralExpr(expr: Literal): any {
     return expr.value;
+  }
+
+  public visitLogicalExpr(expr: Logical): any {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(expr.right);
   }
 
   public visitUnaryExpr(expr: Unary): any {
