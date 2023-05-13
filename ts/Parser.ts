@@ -1,6 +1,6 @@
 import assert from "node:assert";
-import { Binary, Expr, Variable as ExprVariable, Grouping, Literal, Unary } from "./Expr.js";
 import Lox from "./lox.js";
+import { Assign, Binary, Expr, Variable, Grouping, Literal, Unary } from "./Expr.js";
 import { Expression as StmtExpression, Print, Stmt, Var } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
@@ -28,7 +28,7 @@ export default class Parser {
   }
 
   private expression(): Expr {
-    return this.equality();
+    return this.assignment();
   }
 
   private declaration(): Stmt | void {
@@ -66,6 +66,21 @@ export default class Parser {
     const expr = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new StmtExpression(expr);
+  }
+
+  private assignment(): Expr {
+    const expr = this.equality();
+
+    if (this.match(TokenType.EQUAL)) {
+      const equals = this.previous();
+      const value = this.assignment();
+
+      if (expr instanceof Variable) return new Assign(expr.name, value);
+
+      this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
   }
 
   private equality(): Expr {
@@ -138,7 +153,7 @@ export default class Parser {
     if (this.match(TokenType.TRUE)) return new Literal(true);
     if (this.match(TokenType.NIL)) return new Literal(null);
     if (this.match(TokenType.NUMBER, TokenType.STRING)) return new Literal(this.previous().literal);
-    if (this.match(TokenType.IDENTIFIER)) return new ExprVariable(this.previous());
+    if (this.match(TokenType.IDENTIFIER)) return new Variable(this.previous());
 
     if (this.match(TokenType.LEFT_PAREN)) {
       const expr = this.expression();

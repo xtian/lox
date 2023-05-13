@@ -12,6 +12,15 @@ export default class Environment {
     throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
   }
 
+  public assign(name: Token, value: any): void {
+    if (this.values[name.lexeme] !== undefined) {
+      this.values[name.lexeme] = value;
+      return;
+    }
+
+    throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
+  }
+
   public define(name: string, value: any): void {
     this.values[name] = value;
   }

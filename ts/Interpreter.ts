@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import Environment from "./Environment.js";
-import { Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
+import { Assign, Binary, Expr, Grouping, Literal, Unary } from "./Expr.js";
 import Lox from "./lox.js";
 import RuntimeError from "./RuntimeError.js";
 import { Token, TokenType } from "./Token.js";
@@ -146,5 +146,11 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     if (stmt.initializer != null) value = this.evaluate(stmt.initializer);
 
     this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitAssignExpr(expr: Assign) {
+    const value = this.evaluate(expr.value);
+    this.environment.assign(expr.name, value);
+    return value;
   }
 }
