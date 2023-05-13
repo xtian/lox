@@ -14,6 +14,7 @@ import type {
   Stmt,
   Var as StmtVar,
   Visitor as StmtVisitor,
+  While,
 } from "./Stmt.js";
 
 export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> {
@@ -184,6 +185,10 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     if (stmt.initializer != null) value = this.evaluate(stmt.initializer);
 
     this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitWhileStmt(stmt: While): void {
+    while (this.isTruthy(this.evaluate(stmt.condition))) this.execute(stmt.body);
   }
 
   public visitAssignExpr(expr: Assign) {
