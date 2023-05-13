@@ -1,11 +1,24 @@
-import assert from "node:assert";
 import Environment from "./Environment.js";
-import { Assign, Binary, Expr, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import Lox from "./lox.js";
 import RuntimeError from "./RuntimeError.js";
+import assert from "node:assert";
 import { Token, TokenType } from "./Token.js";
+import { isCallable } from "./LoxCallable.js";
 
-import type { Variable as ExprVariable, Visitor as ExprVisitor } from "./Expr.js";
+import type LoxCallable from "./LoxCallable.js";
+import type {
+  Assign,
+  Binary,
+  Call,
+  Expr,
+  Grouping,
+  Literal,
+  Logical,
+  Unary,
+  Variable as ExprVariable,
+  Visitor as ExprVisitor,
+} from "./Expr.js";
+
 import type {
   Block,
   Expression as StmtExpression,
@@ -76,6 +89,26 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     }
 
     assert(false);
+  }
+
+  public visitCallExpr(expr: Call): any {
+    const callee = this.evaluate(expr.callee);
+    const args = expr.args.map(this.evaluate);
+
+    if (!isCallable(callee)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+
+    const func: LoxCallable = callee;
+
+    if (args.length != func.arity()) {
+      throw new RuntimeError(
+        expr.paren,
+        `Expected ${func.arity()} arguments but got ${args.length}.`
+      );
+    }
+
+    func.call(this, args);
   }
 
   public visitGroupingExpr(expr: Grouping): any {

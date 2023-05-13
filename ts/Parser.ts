@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import Lox from "./lox.js";
-import { Assign, Binary, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
+import { Assign, Binary, Call, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import { Block, Expression as StmtExpression, If, Print, Stmt, Var, While } from "./Stmt.js";
 import { TokenType } from "./Token.js";
 
@@ -243,7 +243,36 @@ export default class Parser {
       return new Unary(operator, right);
     }
 
-    return this.primary();
+    return this.call();
+  }
+
+  private finishCall(callee: Expr): Expr {
+    const args = [];
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (args.length >= 255) this.error(this.peek(), "Can't have more than 255 arguments.");
+        args.push(this.expression());
+      } while (this.match(TokenType.COMMA));
+    }
+
+    const paren = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+    return new Call(callee, paren, args);
+  }
+
+  private call(): Expr {
+    let expr = this.primary();
+
+    while (true) {
+      if (this.match(TokenType.LEFT_PAREN)) {
+        expr = this.finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
   }
 
   private primary(): Expr {
