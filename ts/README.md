@@ -1,4 +1,4 @@
-# lox
+# tslox
 
 ## Setup
 
