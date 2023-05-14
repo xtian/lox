@@ -2,26 +2,24 @@ import Lox from "./Lox.js";
 import { Token, TokenType } from "./Token.js";
 
 export default class Scanner {
-  private static readonly keywords: { [key: string]: TokenType } = {};
-
-  static {
-    this.keywords["and"] = TokenType.AND;
-    this.keywords["class"] = TokenType.CLASS;
-    this.keywords["else"] = TokenType.ELSE;
-    this.keywords["false"] = TokenType.FALSE;
-    this.keywords["for"] = TokenType.FOR;
-    this.keywords["fun"] = TokenType.FUN;
-    this.keywords["if"] = TokenType.IF;
-    this.keywords["nil"] = TokenType.NIL;
-    this.keywords["or"] = TokenType.OR;
-    this.keywords["print"] = TokenType.PRINT;
-    this.keywords["return"] = TokenType.RETURN;
-    this.keywords["super"] = TokenType.SUPER;
-    this.keywords["this"] = TokenType.THIS;
-    this.keywords["true"] = TokenType.TRUE;
-    this.keywords["var"] = TokenType.VAR;
-    this.keywords["while"] = TokenType.WHILE;
-  }
+  private static readonly keywords: { [key: string]: TokenType } = {
+    and: TokenType.AND,
+    class: TokenType.CLASS,
+    else: TokenType.ELSE,
+    false: TokenType.FALSE,
+    for: TokenType.FOR,
+    fun: TokenType.FUN,
+    if: TokenType.IF,
+    nil: TokenType.NIL,
+    or: TokenType.OR,
+    print: TokenType.PRINT,
+    return: TokenType.RETURN,
+    super: TokenType.SUPER,
+    this: TokenType.THIS,
+    true: TokenType.TRUE,
+    var: TokenType.VAR,
+    while: TokenType.WHILE,
+  };
 
   private readonly source: string;
   private readonly tokens: Token[] = [];
