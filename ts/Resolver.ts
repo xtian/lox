@@ -31,7 +31,7 @@ import type {
 
 export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   private readonly interpreter: Interpreter;
-  private readonly scopes: { [key: string]: boolean }[] = [];
+  private readonly scopes: Map<string, boolean>[] = [];
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
@@ -111,7 +111,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitVariableExpr(expr: ExprVariable): void {
     const scope = this.scopes[this.scopes.length - 1];
 
-    if (scope && scope[expr.name.lexeme] === false) {
+    if (scope && scope.get(expr.name.lexeme) === false) {
       Lox.error(expr.name, "Can't read local variable in its own initializer.");
     }
 
@@ -139,7 +139,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   }
 
   private beginScope(): void {
-    this.scopes.push({});
+    this.scopes.push(new Map());
   }
 
   private endScope(): void {
@@ -148,19 +148,19 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
   private declare(name: Token): void {
     const scope = this.scopes[this.scopes.length - 1];
-    if (scope) scope[name.lexeme] = false;
+    if (scope) scope.set(name.lexeme, false);
   }
 
   private define(name: Token): void {
     const scope = this.scopes[this.scopes.length - 1];
-    if (scope) scope[name.lexeme] = true;
+    if (scope) scope.set(name.lexeme, true);
   }
 
   private resolveLocal(expr: Expr, name: Token): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
       const scope = this.scopes[i];
 
-      if (scope && scope[name.lexeme] !== undefined) {
+      if (scope && scope.has(name.lexeme)) {
         this.interpreter.resolve(expr, this.scopes.length - 1 - i);
         return;
       }
