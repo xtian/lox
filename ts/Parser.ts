@@ -4,6 +4,7 @@ import { Assign, Binary, Call, Expr, Variable, Grouping, Literal, Logical, Unary
 import { Token, TokenType } from "./Token.js";
 
 import {
+  Class,
   Block,
   Expression as StmtExpression,
   Func,
@@ -42,6 +43,7 @@ export default class Parser {
 
   private declaration(): Stmt | void {
     try {
+      if (this.match(TokenType.CLASS)) return this.classDeclaration();
       if (this.match(TokenType.FUN)) return this.function("function");
       if (this.match(TokenType.VAR)) return this.varDeclaration();
       return this.statement();
@@ -49,6 +51,19 @@ export default class Parser {
       if (error instanceof ParseError) return this.synchronize();
       throw error;
     }
+  }
+
+  private classDeclaration(): Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+    this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+    const methods = [];
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      methods.push(this.function("method"));
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+    return new Class(name, methods);
   }
 
   private statement(): Stmt {

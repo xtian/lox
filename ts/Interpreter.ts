@@ -1,5 +1,6 @@
 import Environment from "./Environment.js";
 import Lox from "./Lox.js";
+import LoxClass from "./LoxClass.js";
 import LoxFunction from "./LoxFunction.js";
 import Return from "./Return.js";
 import RuntimeError from "./RuntimeError.js";
@@ -23,6 +24,7 @@ import type {
 
 import type {
   Block,
+  Class,
   Expression as StmtExpression,
   Func,
   If,
@@ -226,6 +228,11 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   public visitBlockStmt(stmt: Block): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  public visitClassStmt(stmt: Class): void {
+    this.environment.define(stmt.name.lexeme, null);
+    this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme));
   }
 
   public visitExpressionStmt(stmt: StmtExpression): void {

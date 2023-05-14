@@ -17,6 +17,7 @@ import type {
 
 import type {
   Block,
+  Class,
   Expression as StmtExpression,
   Func,
   If,
@@ -46,6 +47,11 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.beginScope();
     this.resolve(stmt.statements);
     this.endScope();
+  }
+
+  public visitClassStmt(stmt: Class): void {
+    this.declare(stmt.name);
+    this.define(stmt.name);
   }
 
   public visitExpressionStmt(stmt: StmtExpression): void {

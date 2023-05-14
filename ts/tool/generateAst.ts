@@ -34,6 +34,7 @@ class GenerateAst {
       ["Expr", "Token"],
       [
         ["Block", "statements: Stmt[]"],
+        ["Class", "name: Token, methods: Func[]"],
         ["Expression", "expression: Expr"],
         ["Func", "name: Token, params: Token[], body: Stmt[]"],
         ["If", "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null"],
