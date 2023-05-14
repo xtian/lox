@@ -6,5 +6,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 set -o verbose
 
-node_modules/.bin/tsc --noEmit
+bun run tsc --noEmit
+bun run prettier --plugin-search-dir . --check .
 bun test

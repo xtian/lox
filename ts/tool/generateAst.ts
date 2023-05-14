@@ -75,11 +75,7 @@ class GenerateAst {
     writer.end();
   }
 
-  private static defineVisitor(
-    writer: WriteStream,
-    baseName: string,
-    types: [string, string][]
-  ): void {
+  private static defineVisitor(writer: WriteStream, baseName: string, types: [string, string][]): void {
     writer.write(`\nexport interface Visitor<R> {\n`);
 
     for (const [typeName] of types) {

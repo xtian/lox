@@ -240,9 +240,7 @@ export default class Parser {
   private comparison(): Expr {
     let expr = this.term();
 
-    while (
-      this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)
-    ) {
+    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
       const operator = this.previous();
       const right = this.term();
 

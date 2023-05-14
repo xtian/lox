@@ -125,10 +125,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     const func: LoxCallable = callee;
 
     if (args.length != func.arity()) {
-      throw new RuntimeError(
-        expr.paren,
-        `Expected ${func.arity()} arguments but got ${args.length}.`
-      );
+      throw new RuntimeError(expr.paren, `Expected ${func.arity()} arguments but got ${args.length}.`);
     }
 
     return func.call(this, args);
