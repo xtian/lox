@@ -3,6 +3,7 @@
 import { exit } from "node:process";
 import Interpreter from "./Interpreter.js";
 import Parser from "./Parser.js";
+import Resolver from "./Resolver.js";
 import RuntimeError from "./RuntimeError.js";
 import Scanner from "./Scanner.js";
 import { Token, TokenType } from "./Token.js";
@@ -50,6 +51,7 @@ export default class Lox {
     // Stop if there was a syntax error
     if (this.hadError) return;
 
+    new Resolver(this.interpreter).resolve(statements);
     this.interpreter.interpret(statements);
   }
 

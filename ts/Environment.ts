@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import RuntimeError from "./RuntimeError.js";
 
 import type { Token } from "./Token.js";
@@ -33,5 +34,25 @@ export default class Environment {
 
   public define(name: string, value: any): void {
     this.values.set(name, value);
+  }
+
+  public ancestor(distance: number): Environment {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let environment: Environment | null = this;
+
+    for (let i = 0; i < distance; i++) {
+      environment = environment.enclosing;
+      assert(environment);
+    }
+
+    return environment;
+  }
+
+  public getAt(distance: number, name: string): any {
+    return this.ancestor(distance).values.get(name);
+  }
+
+  public assignAt(distance: number, name: Token, value: any): void {
+    this.ancestor(distance).values.set(name.lexeme, value);
   }
 }

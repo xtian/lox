@@ -9,7 +9,6 @@ import type {
   Call,
   Expr,
   Grouping,
-  Literal,
   Logical,
   Unary,
   Variable as ExprVariable,
@@ -97,7 +96,8 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.resolve(expr.expression);
   }
 
-  public visitLiteralExpr(_expr: Literal): void {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  public visitLiteralExpr(): void {}
 
   public visitLogicalExpr(expr: Logical): void {
     this.resolve(expr.left);
@@ -118,7 +118,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.resolveLocal(expr, expr.name);
   }
 
-  private resolve(arg: Expr | Stmt | Stmt[]): void {
+  public resolve(arg: Expr | Stmt | Stmt[]): void {
     if (Array.isArray(arg)) {
       for (const statement of arg) this.resolve(statement);
     } else {
