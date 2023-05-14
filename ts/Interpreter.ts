@@ -1,6 +1,7 @@
 import Environment from "./Environment.js";
 import Lox from "./lox.js";
 import LoxFunction from "./LoxFunction.js";
+import Return from "./Return.js";
 import RuntimeError from "./RuntimeError.js";
 import assert from "node:assert";
 import { Token, TokenType } from "./Token.js";
@@ -26,6 +27,7 @@ import type {
   Function as StmtFunction,
   If,
   Print,
+  Return as StmtReturn,
   Stmt,
   Var as StmtVar,
   Visitor as StmtVisitor,
@@ -237,6 +239,13 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
   public visitPrintStmt(stmt: Print): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
+  }
+
+  public visitReturnStmt(stmt: StmtReturn): void {
+    let value = null;
+    if (stmt.value != null) value = this.evaluate(stmt.value);
+
+    throw new Return(value);
   }
 
   public visitVarStmt(stmt: StmtVar): void {

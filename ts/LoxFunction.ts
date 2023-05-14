@@ -1,5 +1,7 @@
 import Environment from "./Environment.js";
 import Interpreter from "./Interpreter.js";
+import Return from "./Return.js";
+
 import type LoxCallable from "./LoxCallable.js";
 import type { Function } from "./Stmt.js";
 
@@ -28,6 +30,13 @@ export default class LoxFunction implements LoxCallable {
       environment.define(param.lexeme, args[i]);
     }
 
-    interpreter.executeBlock(this.declaration.body, environment);
+    try {
+      interpreter.executeBlock(this.declaration.body, environment);
+    } catch (error) {
+      if (error instanceof Return) return error.value;
+      throw error;
+    }
+
+    return null;
   }
 }
