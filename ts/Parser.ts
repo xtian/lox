@@ -1,4 +1,4 @@
-import Lox from "./lox.js";
+import Lox from "./Lox.js";
 import assert from "node:assert";
 import { Assign, Binary, Call, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import { Token, TokenType } from "./Token.js";

@@ -9,4 +9,4 @@ set -o verbose
 bun run tsc --noEmit
 bun run eslint .
 bun run prettier --plugin-search-dir . --check .
-bun test
+bun test test/

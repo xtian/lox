@@ -16,8 +16,8 @@ bin/test
 
 ```sh
 # repl
-./lox.ts
+./tslox
 
 # execute file
-./lox.ts file.lox
+./tslox file.lox
 ```

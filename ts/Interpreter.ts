@@ -1,5 +1,5 @@
 import Environment from "./Environment.js";
-import Lox from "./lox.js";
+import Lox from "./Lox.js";
 import LoxFunction from "./LoxFunction.js";
 import Return from "./Return.js";
 import RuntimeError from "./RuntimeError.js";

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { argv, exit } from "node:process";
+import { exit } from "node:process";
 import Interpreter from "./Interpreter.js";
 import Parser from "./Parser.js";
 import RuntimeError from "./RuntimeError.js";
@@ -79,5 +79,3 @@ export default class Lox {
     this.hadRuntimeError = true;
   }
 }
-
-await Lox.main(argv.slice(2));

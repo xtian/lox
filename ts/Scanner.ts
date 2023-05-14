@@ -1,4 +1,4 @@
-import Lox from "./lox.js";
+import Lox from "./Lox.js";
 import { Token, TokenType } from "./Token.js";
 
 export default class Scanner {
