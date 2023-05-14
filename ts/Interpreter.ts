@@ -31,7 +31,26 @@ import type {
 } from "./Stmt.js";
 
 export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> {
-  private environment: Environment = new Environment();
+  readonly globals: Environment = new Environment();
+  private environment: Environment = this.globals;
+
+  constructor() {
+    const Clock = class implements LoxCallable {
+      public arity() {
+        return 0;
+      }
+
+      public call() {
+        return performance.now() / 1000;
+      }
+
+      public toString() {
+        return "<native fn>";
+      }
+    };
+
+    this.globals.define("clock", new Clock());
+  }
 
   public interpret(statements: Stmt[]): void {
     try {
@@ -108,7 +127,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
       );
     }
 
-    func.call(this, args);
+    return func.call(this, args);
   }
 
   public visitGroupingExpr(expr: Grouping): any {
