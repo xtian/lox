@@ -8,7 +8,7 @@ export abstract class Stmt {
 export interface Visitor<R> {
   visitBlockStmt(stmt: Block): R;
   visitExpressionStmt(stmt: Expression): R;
-  visitFunctionStmt(stmt: Function): R;
+  visitFuncStmt(stmt: Func): R;
   visitIfStmt(stmt: If): R;
   visitPrintStmt(stmt: Print): R;
   visitReturnStmt(stmt: Return): R;
@@ -44,7 +44,7 @@ export class Expression extends Stmt {
   }
 }
 
-export class Function extends Stmt {
+export class Func extends Stmt {
   readonly name: Token;
   readonly params: Token[];
   readonly body: Stmt[];
@@ -58,7 +58,7 @@ export class Function extends Stmt {
   }
 
   accept<R>(visitor: Visitor<R>): R {
-    return visitor.visitFunctionStmt(this);
+    return visitor.visitFuncStmt(this);
   }
 }
 

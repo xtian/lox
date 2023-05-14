@@ -6,7 +6,7 @@ import { Token, TokenType } from "./Token.js";
 import {
   Block,
   Expression as StmtExpression,
-  Function,
+  Func,
   If,
   Print,
   Return as StmtReturn,
@@ -19,7 +19,7 @@ class ParseError extends Error {}
 
 export default class Parser {
   private readonly tokens: Token[];
-  private current: number = 0;
+  private current = 0;
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;
@@ -151,7 +151,7 @@ export default class Parser {
     return new StmtExpression(expr);
   }
 
-  private function(kind: string): Function {
+  private function(kind: string): Func {
     const name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name.`);
     this.consume(TokenType.LEFT_PAREN, `Expect '(' after ${kind} name.`);
 
@@ -170,7 +170,7 @@ export default class Parser {
     this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
     this.consume(TokenType.LEFT_BRACE, `Expect '{' before ${kind} body.`);
 
-    return new Function(name, parameters, this.block());
+    return new Func(name, parameters, this.block());
   }
 
   private block(): Stmt[] {
@@ -305,7 +305,7 @@ export default class Parser {
   private call(): Expr {
     let expr = this.primary();
 
-    while (true) {
+    for (;;) {
       if (this.match(TokenType.LEFT_PAREN)) {
         expr = this.finishCall(expr);
       } else {

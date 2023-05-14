@@ -3,12 +3,12 @@ import Interpreter from "./Interpreter.js";
 import Return from "./Return.js";
 
 import type LoxCallable from "./LoxCallable.js";
-import type { Function } from "./Stmt.js";
+import type { Func } from "./Stmt.js";
 
 export default class LoxFunction implements LoxCallable {
-  private readonly declaration: Function;
+  private readonly declaration: Func;
 
-  constructor(declaration: Function) {
+  constructor(declaration: Func) {
     this.declaration = declaration;
   }
 

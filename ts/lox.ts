@@ -9,8 +9,8 @@ import { Token, TokenType } from "./Token.js";
 
 export default class Lox {
   private static readonly interpreter: Interpreter = new Interpreter();
-  static hadError: boolean = false;
-  static hadRuntimeError: boolean = false;
+  static hadError = false;
+  static hadRuntimeError = false;
 
   static async main(args: string[]): Promise<void> {
     if (args.length > 1) {

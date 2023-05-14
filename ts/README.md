@@ -6,6 +6,12 @@
 bin/setup
 ```
 
+## Running the tests
+
+```sh
+bin/test
+```
+
 ## Usage
 
 ```sh

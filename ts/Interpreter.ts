@@ -24,7 +24,7 @@ import type {
 import type {
   Block,
   Expression as StmtExpression,
-  Function as StmtFunction,
+  Func,
   If,
   Print,
   Return as StmtReturn,
@@ -220,7 +220,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     this.evaluate(stmt.expression);
   }
 
-  public visitFunctionStmt(stmt: StmtFunction): void {
+  public visitFuncStmt(stmt: Func): void {
     const func = new LoxFunction(stmt);
     this.environment.define(stmt.name.lexeme, func);
   }
