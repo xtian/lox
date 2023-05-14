@@ -1,10 +1,18 @@
-import assert from "node:assert";
 import Lox from "./lox.js";
+import assert from "node:assert";
 import { Assign, Binary, Call, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
-import { Block, Expression as StmtExpression, If, Print, Stmt, Var, While } from "./Stmt.js";
-import { TokenType } from "./Token.js";
+import { Token, TokenType } from "./Token.js";
 
-import { Token } from "./Token.js";
+import {
+  Block,
+  Expression as StmtExpression,
+  Function,
+  If,
+  Print,
+  Stmt,
+  Var,
+  While,
+} from "./Stmt.js";
 
 class ParseError extends Error {}
 
@@ -33,6 +41,7 @@ export default class Parser {
 
   private declaration(): Stmt | void {
     try {
+      if (this.match(TokenType.FUN)) return this.function("function");
       if (this.match(TokenType.VAR)) return this.varDeclaration();
       return this.statement();
     } catch (error) {
@@ -128,6 +137,28 @@ export default class Parser {
     const expr = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new StmtExpression(expr);
+  }
+
+  private function(kind: string): Function {
+    const name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name.`);
+    this.consume(TokenType.LEFT_PAREN, `Expect '(' after ${kind} name.`);
+
+    const parameters = [];
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.length >= 255) {
+          this.error(this.peek(), "Can't have more than 255 parameters.");
+        }
+
+        parameters.push(this.consume(TokenType.IDENTIFIER, "Expect parameter name."));
+      } while (this.match(TokenType.COMMA));
+    }
+
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+    this.consume(TokenType.LEFT_BRACE, `Expect '{' before ${kind} body.`);
+
+    return new Function(name, parameters, this.block());
   }
 
   private block(): Stmt[] {

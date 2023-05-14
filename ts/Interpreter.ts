@@ -1,5 +1,6 @@
 import Environment from "./Environment.js";
 import Lox from "./lox.js";
+import LoxFunction from "./LoxFunction.js";
 import RuntimeError from "./RuntimeError.js";
 import assert from "node:assert";
 import { Token, TokenType } from "./Token.js";
@@ -22,6 +23,7 @@ import type {
 import type {
   Block,
   Expression as StmtExpression,
+  Function as StmtFunction,
   If,
   Print,
   Stmt,
@@ -112,7 +114,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   public visitCallExpr(expr: Call): any {
     const callee = this.evaluate(expr.callee);
-    const args = expr.args.map(this.evaluate);
+    const args = expr.args.map(this.evaluate.bind(this));
 
     if (!isCallable(callee)) {
       throw new RuntimeError(expr.paren, "Can only call functions and classes.");
@@ -200,7 +202,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     stmt.accept(this);
   }
 
-  private executeBlock(statements: Stmt[], environment: Environment): void {
+  public executeBlock(statements: Stmt[], environment: Environment): void {
     const previous = this.environment;
 
     try {
@@ -217,6 +219,11 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
 
   public visitExpressionStmt(stmt: StmtExpression): void {
     this.evaluate(stmt.expression);
+  }
+
+  public visitFunctionStmt(stmt: StmtFunction): void {
+    const func = new LoxFunction(stmt);
+    this.environment.define(stmt.name.lexeme, func);
   }
 
   public visitIfStmt(stmt: If): void {
