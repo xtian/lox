@@ -28,9 +28,15 @@ import type {
   While,
 } from "./Stmt.js";
 
+const enum FunctionType {
+  NONE,
+  FUNCTION,
+}
+
 export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   private readonly interpreter: Interpreter;
   private readonly scopes: Map<string, boolean>[] = [];
+  private currentFunction = FunctionType.NONE;
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
@@ -49,7 +55,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitFuncStmt(stmt: Func): void {
     this.declare(stmt.name);
     this.define(stmt.name);
-    this.resolveFunc(stmt);
+    this.resolveFunction(stmt, FunctionType.FUNCTION);
   }
 
   public visitIfStmt(stmt: If): void {
@@ -63,6 +69,10 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   }
 
   public visitReturnStmt(stmt: StmtReturn): void {
+    if (this.currentFunction == FunctionType.NONE) {
+      Lox.error(stmt.keyword, "Can't return from top-level code.");
+    }
+
     if (stmt.value != null) this.resolve(stmt.value);
   }
 
@@ -126,7 +136,9 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
   }
 
-  private resolveFunc(func: Func): void {
+  private resolveFunction(func: Func, type: FunctionType): void {
+    const enclosingFunction = this.currentFunction;
+    this.currentFunction = type;
     this.beginScope();
 
     for (const param of func.params) {
@@ -136,6 +148,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
     this.resolve(func.body);
     this.endScope();
+    this.currentFunction = enclosingFunction;
   }
 
   private beginScope(): void {
@@ -148,7 +161,10 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
   private declare(name: Token): void {
     const scope = this.scopes[this.scopes.length - 1];
-    if (scope) scope.set(name.lexeme, false);
+    if (!scope) return;
+
+    if (scope.has(name.lexeme)) Lox.error(name, "Already a variable with this name in this scope.");
+    scope.set(name.lexeme, false);
   }
 
   private define(name: Token): void {

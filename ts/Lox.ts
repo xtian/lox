@@ -52,6 +52,10 @@ export default class Lox {
     if (this.hadError) return;
 
     new Resolver(this.interpreter).resolve(statements);
+
+    // Stop if there was a resolution error
+    if (this.hadError) return;
+
     this.interpreter.interpret(statements);
   }
 
