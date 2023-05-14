@@ -1,14 +1,17 @@
 # lox
 
-To install dependencies:
+## Setup
 
 ```sh
-bun install
+bin/setup
 ```
 
-To run:
+## Usage
 
 ```sh
+# repl
 ./lox.ts
-```
 
+# execute file
+./lox.ts file.lox
+```

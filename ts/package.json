@@ -1,7 +1,7 @@
 {
   "name": "lox",
   "private": true,
-  "module": "index.ts",
+  "module": "lox.ts",
   "type": "module",
   "devDependencies": {
     "@types/node": "^18.15.10",
