@@ -1,7 +1,20 @@
 import Lox from "./Lox.js";
 import assert from "node:assert";
-import { Assign, Binary, Call, Expr, Variable, Grouping, Literal, Logical, Unary } from "./Expr.js";
 import { Token, TokenType } from "./Token.js";
+
+import {
+  Assign,
+  Binary,
+  Call,
+  Expr,
+  Get,
+  Variable,
+  Grouping,
+  Literal,
+  Logical,
+  Set as ExprSet,
+  Unary,
+} from "./Expr.js";
 
 import {
   Class,
@@ -208,6 +221,7 @@ export default class Parser {
       const value = this.assignment();
 
       if (expr instanceof Variable) return new Assign(expr.name, value);
+      if (expr instanceof Get) return new ExprSet(expr.object, expr.name, value);
 
       this.error(equals, "Invalid assignment target.");
     }
@@ -323,6 +337,9 @@ export default class Parser {
     for (;;) {
       if (this.match(TokenType.LEFT_PAREN)) {
         expr = this.finishCall(expr);
+      } else if (this.match(TokenType.DOT)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+        expr = new Get(expr, name);
       } else {
         break;
       }

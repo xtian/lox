@@ -2,6 +2,7 @@ import Environment from "./Environment.js";
 import Lox from "./Lox.js";
 import LoxClass from "./LoxClass.js";
 import LoxFunction from "./LoxFunction.js";
+import LoxInstance from "./LoxInstance.js";
 import Return from "./Return.js";
 import RuntimeError from "./RuntimeError.js";
 import assert from "node:assert";
@@ -14,9 +15,11 @@ import type {
   Binary,
   Call,
   Expr,
+  Get,
   Grouping,
   Literal,
   Logical,
+  Set as ExprSet,
   Unary,
   Variable as ExprVariable,
   Visitor as ExprVisitor,
@@ -134,6 +137,13 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     return func.call(this, args);
   }
 
+  public visitGetExpr(expr: Get) {
+    const object = this.evaluate(expr.object);
+
+    if (object instanceof LoxInstance) return object.get(expr.name);
+    throw new RuntimeError(expr.name, "Only instances have properties.");
+  }
+
   public visitGroupingExpr(expr: Grouping): any {
     return this.evaluate(expr.expression);
   }
@@ -152,6 +162,16 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     }
 
     return this.evaluate(expr.right);
+  }
+
+  public visitSetExpr(expr: ExprSet): any {
+    const object = this.evaluate(expr.object);
+    if (!(object instanceof LoxInstance)) throw new RuntimeError(expr.name, "Only instances have fields.");
+
+    const value = this.evaluate(expr.value);
+    object.set(expr.name, value);
+
+    return value;
   }
 
   public visitUnaryExpr(expr: Unary): any {

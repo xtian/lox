@@ -8,8 +8,10 @@ import type {
   Binary,
   Call,
   Expr,
+  Get,
   Grouping,
   Logical,
+  Set as ExprSet,
   Unary,
   Variable as ExprVariable,
   Visitor as ExprVisitor,
@@ -108,6 +110,10 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     for (const arg of expr.args) this.resolve(arg);
   }
 
+  public visitGetExpr(expr: Get): void {
+    this.resolve(expr.object);
+  }
+
   public visitGroupingExpr(expr: Grouping): void {
     this.resolve(expr.expression);
   }
@@ -118,6 +124,11 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitLogicalExpr(expr: Logical): void {
     this.resolve(expr.left);
     this.resolve(expr.right);
+  }
+
+  public visitSetExpr(expr: ExprSet): void {
+    this.resolve(expr.value);
+    this.resolve(expr.object);
   }
 
   public visitUnaryExpr(expr: Unary): void {
