@@ -47,8 +47,7 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     if (stmt.superclass != null) this.resolve(stmt.superclass);
 
     this.beginScope();
-    const scope = this.scopes[this.scopes.length - 1];
-    if (scope) scope.set("this", true);
+    this.scopes[this.scopes.length - 1]?.set("this", true);
 
     for (const method of stmt.methods) {
       const declaration = method.name.lexeme === "init" ? FunctionType.INITIALIZER : FunctionType.METHOD;
@@ -150,9 +149,7 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   }
 
   public visitVariableExpr(expr: Expr.Variable): void {
-    const scope = this.scopes[this.scopes.length - 1];
-
-    if (scope && scope.get(expr.name.lexeme) === false) {
+    if (this.scopes[this.scopes.length - 1]?.get(expr.name.lexeme) === false) {
       Lox.error(expr.name, "Can't read local variable in its own initializer.");
     }
 
@@ -192,22 +189,18 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
 
   private declare(name: Token): void {
     const scope = this.scopes[this.scopes.length - 1];
-    if (!scope) return;
 
-    if (scope.has(name.lexeme)) Lox.error(name, "Already a variable with this name in this scope.");
-    scope.set(name.lexeme, false);
+    if (scope?.has(name.lexeme)) Lox.error(name, "Already a variable with this name in this scope.");
+    scope?.set(name.lexeme, false);
   }
 
   private define(name: Token): void {
-    const scope = this.scopes[this.scopes.length - 1];
-    if (scope) scope.set(name.lexeme, true);
+    this.scopes[this.scopes.length - 1]?.set(name.lexeme, true);
   }
 
   private resolveLocal(expr: Expr.Expr, name: Token): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
-      const scope = this.scopes[i];
-
-      if (scope && scope.has(name.lexeme)) {
+      if (this.scopes[i]?.has(name.lexeme)) {
         this.interpreter.resolve(expr, this.scopes.length - 1 - i);
         return;
       }

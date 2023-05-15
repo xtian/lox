@@ -26,8 +26,7 @@ export default class LoxClass implements LoxCallable {
   public call(interpreter: Interpreter, args: any[]) {
     const instance = new LoxInstance(this);
 
-    const initializer = this.findMethod("init");
-    if (initializer != null) initializer.bind(instance).call(interpreter, args);
+    this.findMethod("init")?.bind(instance).call(interpreter, args);
 
     return instance;
   }
