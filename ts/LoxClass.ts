@@ -16,7 +16,7 @@ export default class LoxClass implements LoxCallable {
   }
 
   public findMethod(name: string): LoxFunction | undefined {
-    return this.methods.get(name);
+    return this.methods.get(name) || this.superclass?.findMethod(name);
   }
 
   public toString(): string {
