@@ -23,3 +23,9 @@ exports[`fibonacci 1`] = `
 4181
 "
 `;
+
+exports[`inheritance 1`] = `
+"Fry until golden brown.
+Pipe full of custard and coat with chocolate.
+"
+`;
