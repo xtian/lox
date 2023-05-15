@@ -9,8 +9,10 @@ import type { Func } from "./Stmt.js";
 export default class LoxFunction implements LoxCallable {
   private readonly declaration: Func;
   private readonly closure: Environment;
+  private readonly isInitializer: boolean;
 
-  constructor(declaration: Func, closure: Environment) {
+  constructor(declaration: Func, closure: Environment, isInitializer: boolean) {
+    this.isInitializer = isInitializer;
     this.closure = closure;
     this.declaration = declaration;
   }
@@ -18,7 +20,7 @@ export default class LoxFunction implements LoxCallable {
   public bind(instance: LoxInstance): LoxFunction {
     const environment = new Environment(this.closure);
     environment.define("this", instance);
-    return new LoxFunction(this.declaration, environment);
+    return new LoxFunction(this.declaration, environment, this.isInitializer);
   }
 
   public toString(): string {
@@ -42,10 +44,15 @@ export default class LoxFunction implements LoxCallable {
     try {
       interpreter.executeBlock(this.declaration.body, environment);
     } catch (error) {
-      if (error instanceof Return) return error.value;
+      if (error instanceof Return) {
+        if (this.isInitializer) return this.closure.getAt(0, "this");
+        return error.value;
+      }
+
       throw error;
     }
 
+    if (this.isInitializer) return this.closure.getAt(0, "this");
     return null;
   }
 }

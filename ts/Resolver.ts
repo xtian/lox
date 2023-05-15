@@ -9,6 +9,7 @@ import type * as Stmt from "./Stmt.js";
 const enum FunctionType {
   NONE,
   FUNCTION,
+  INITIALIZER,
   METHOD,
 }
 
@@ -43,7 +44,11 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     const scope = this.scopes[this.scopes.length - 1];
     if (scope) scope.set("this", true);
 
-    for (const method of stmt.methods) this.resolveFunction(method, FunctionType.METHOD);
+    for (const method of stmt.methods) {
+      const declaration = method.name.lexeme === "init" ? FunctionType.INITIALIZER : FunctionType.METHOD;
+      this.resolveFunction(method, declaration);
+    }
+
     this.endScope();
     this.currentClass = enclosingClass;
   }
@@ -73,7 +78,13 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
       Lox.error(stmt.keyword, "Can't return from top-level code.");
     }
 
-    if (stmt.value != null) this.resolve(stmt.value);
+    if (stmt.value != null) {
+      if (this.currentFunction === FunctionType.INITIALIZER) {
+        Lox.error(stmt.keyword, "Can't return a value from an initializer.");
+      }
+
+      this.resolve(stmt.value);
+    }
   }
 
   public visitVarStmt(stmt: Stmt.Var): void {

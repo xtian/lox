@@ -234,7 +234,8 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     const methods = new Map();
 
     for (const method of stmt.methods) {
-      methods.set(method.name.lexeme, new LoxFunction(method, this.environment));
+      const isInitializer = method.name.lexeme === "init";
+      methods.set(method.name.lexeme, new LoxFunction(method, this.environment, isInitializer));
     }
 
     this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme, methods));
@@ -245,7 +246,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   public visitFuncStmt(stmt: Stmt.Func): void {
-    const func = new LoxFunction(stmt, this.environment);
+    const func = new LoxFunction(stmt, this.environment, false);
     this.environment.define(stmt.name.lexeme, func);
   }
 
