@@ -111,7 +111,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return func.call(this, args);
   }
 
-  public visitGetExpr(expr: Expr.Get) {
+  public visitGetExpr(expr: Expr.Get): any {
     const object = this.evaluate(expr.object);
 
     if (object instanceof LoxInstance) return object.get(expr.name);
@@ -148,7 +148,20 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return value;
   }
 
-  public visitThisExpr(expr: Expr.This) {
+  public visitSuperExpr(expr: Expr.Super): any {
+    const distance = this.locals.get(expr);
+    assert(distance);
+
+    const superclass = this.environment.getAt(distance, "super");
+    const object = this.environment.getAt(distance - 1, "this");
+    const method = superclass.findMethod(expr.method.lexeme);
+
+    if (method == null) throw new RuntimeError(expr.method, `Undefined property '${expr.method.lexeme}'.`);
+
+    return method.bind(object);
+  }
+
+  public visitThisExpr(expr: Expr.This): any {
     return this.lookUpVariable(expr.keyword, expr);
   }
 
@@ -209,7 +222,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     stmt.accept(this);
   }
 
-  public resolve(expr: Expr.Expr, depth: number) {
+  public resolve(expr: Expr.Expr, depth: number): void {
     this.locals.set(expr, depth);
   }
 
@@ -240,11 +253,22 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
     this.environment.define(stmt.name.lexeme, null);
 
+    if (stmt.superclass != null) {
+      this.environment = new Environment(this.environment);
+      this.environment.define("super", superclass);
+    }
+
     const methods = new Map();
 
     for (const method of stmt.methods) {
       const isInitializer = method.name.lexeme === "init";
       methods.set(method.name.lexeme, new LoxFunction(method, this.environment, isInitializer));
+    }
+
+    if (superclass != null) {
+      const enclosing = this.environment.enclosing;
+      assert(enclosing);
+      this.environment = enclosing;
     }
 
     this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme, superclass, methods));
