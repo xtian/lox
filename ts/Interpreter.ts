@@ -229,6 +229,15 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   public visitClassStmt(stmt: Stmt.Class): void {
+    let superclass = null;
+    if (stmt.superclass != null) {
+      superclass = this.evaluate(stmt.superclass);
+
+      if (!(superclass instanceof LoxClass)) {
+        throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+      }
+    }
+
     this.environment.define(stmt.name.lexeme, null);
 
     const methods = new Map();
@@ -238,7 +247,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
       methods.set(method.name.lexeme, new LoxFunction(method, this.environment, isInitializer));
     }
 
-    this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme, methods));
+    this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme, superclass, methods));
   }
 
   public visitExpressionStmt(stmt: Stmt.Expression): void {

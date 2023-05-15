@@ -15,7 +15,7 @@ class GenerateAst {
     this.defineAst(
       outputDir,
       "Expr",
-      ["Token"],
+      [["Token", "Token"]],
       [
         ["Assign", "name: Token, value: Expr"],
         ["Binary", "left: Expr, operator: Token, right: Expr"],
@@ -34,10 +34,13 @@ class GenerateAst {
     this.defineAst(
       outputDir,
       "Stmt",
-      ["Expr", "Token"],
+      [
+        ["Expr, Variable", "Expr"],
+        ["Token", "Token"],
+      ],
       [
         ["Block", "statements: Stmt[]"],
-        ["Class", "name: Token, methods: Func[]"],
+        ["Class", "name: Token, superclass: Variable | null, methods: Func[]"],
         ["Expression", "expression: Expr"],
         ["Func", "name: Token, params: Token[], body: Stmt[]"],
         ["If", "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null"],
@@ -52,14 +55,14 @@ class GenerateAst {
   private static defineAst(
     outputDir: string,
     baseName: string,
-    imports: string[],
+    imports: [string, string][],
     types: [string, string][]
   ): void {
     const path = `${outputDir}/${baseName}.ts`;
     const writer = createWriteStream(path);
 
-    for (const name of imports) {
-      writer.write(`import type { ${name} } from "./${name}.js";\n`);
+    for (const [types, fileName] of imports) {
+      writer.write(`import type { ${types} } from "./${fileName}.js";\n`);
     }
 
     if (imports.length > 0) writer.write("\n");

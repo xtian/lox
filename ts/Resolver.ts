@@ -40,6 +40,12 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.declare(stmt.name);
     this.define(stmt.name);
 
+    if (stmt.superclass != null && stmt.name.lexeme === stmt.superclass.name.lexeme) {
+      Lox.error(stmt.superclass.name, "A class can't inherit from itself.");
+    }
+
+    if (stmt.superclass != null) this.resolve(stmt.superclass);
+
     this.beginScope();
     const scope = this.scopes[this.scopes.length - 1];
     if (scope) scope.set("this", true);

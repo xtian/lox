@@ -1,4 +1,4 @@
-import type { Expr } from "./Expr.js";
+import type { Expr, Variable } from "./Expr.js";
 import type { Token } from "./Token.js";
 
 export abstract class Stmt {
@@ -33,12 +33,14 @@ export class Block extends Stmt {
 
 export class Class extends Stmt {
   readonly name: Token;
+  readonly superclass: Variable | null;
   readonly methods: Func[];
 
-  constructor(name: Token, methods: Func[]) {
+  constructor(name: Token, superclass: Variable | null, methods: Func[]) {
     super();
 
     this.name = name;
+    this.superclass = superclass;
     this.methods = methods;
   }
 
