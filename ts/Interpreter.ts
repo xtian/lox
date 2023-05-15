@@ -148,6 +148,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return value;
   }
 
+  public visitThisExpr(expr: Expr.This) {
+    return this.lookUpVariable(expr.keyword, expr);
+  }
+
   public visitUnaryExpr(expr: Expr.Unary): any {
     const right = this.evaluate(expr.right);
 

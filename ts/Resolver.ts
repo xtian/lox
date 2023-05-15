@@ -12,9 +12,15 @@ const enum FunctionType {
   METHOD,
 }
 
+const enum ClassType {
+  NONE,
+  CLASS,
+}
+
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
   private readonly interpreter: Interpreter;
   private readonly scopes: Map<string, boolean>[] = [];
+  private currentClass = ClassType.NONE;
   private currentFunction = FunctionType.NONE;
 
   constructor(interpreter: Interpreter) {
@@ -28,10 +34,18 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   }
 
   public visitClassStmt(stmt: Stmt.Class): void {
+    const enclosingClass = this.currentClass;
+    this.currentClass = ClassType.CLASS;
     this.declare(stmt.name);
     this.define(stmt.name);
 
+    this.beginScope();
+    const scope = this.scopes[this.scopes.length - 1];
+    if (scope) scope.set("this", true);
+
     for (const method of stmt.methods) this.resolveFunction(method, FunctionType.METHOD);
+    this.endScope();
+    this.currentClass = enclosingClass;
   }
 
   public visitExpressionStmt(stmt: Stmt.Expression): void {
@@ -107,6 +121,11 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   public visitSetExpr(expr: Expr.Set): void {
     this.resolve(expr.value);
     this.resolve(expr.object);
+  }
+
+  public visitThisExpr(expr: Expr.This): void {
+    if (this.currentClass == ClassType.NONE) Lox.error(expr.keyword, "Can't use 'this' outside of a class.");
+    this.resolveLocal(expr, expr.keyword);
   }
 
   public visitUnaryExpr(expr: Expr.Unary): void {

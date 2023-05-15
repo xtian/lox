@@ -3,6 +3,7 @@ import Interpreter from "./Interpreter.js";
 import Return from "./Return.js";
 
 import type LoxCallable from "./LoxCallable.js";
+import type LoxInstance from "./LoxInstance.js";
 import type { Func } from "./Stmt.js";
 
 export default class LoxFunction implements LoxCallable {
@@ -14,15 +15,21 @@ export default class LoxFunction implements LoxCallable {
     this.declaration = declaration;
   }
 
-  toString(): string {
+  public bind(instance: LoxInstance): LoxFunction {
+    const environment = new Environment(this.closure);
+    environment.define("this", instance);
+    return new LoxFunction(this.declaration, environment);
+  }
+
+  public toString(): string {
     return `<fn ${this.declaration.name.lexeme}>`;
   }
 
-  arity(): number {
+  public arity(): number {
     return this.declaration.params.length;
   }
 
-  call(interpreter: Interpreter, args: any[]): any {
+  public call(interpreter: Interpreter, args: any[]): any {
     const environment = new Environment(this.closure);
 
     for (let i = 0; i < this.declaration.params.length; i++) {
