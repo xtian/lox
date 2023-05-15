@@ -210,7 +210,6 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   private stringify(object: any): string {
     if (object == null) return "nil";
-    if (typeof object === "string") return `"${object}"`;
     return object.toString();
   }
 
