@@ -10,39 +10,13 @@ import { Token, TokenType } from "./Token.js";
 import { isCallable } from "./LoxCallable.js";
 
 import type LoxCallable from "./LoxCallable.js";
-import type {
-  Assign,
-  Binary,
-  Call,
-  Expr,
-  Get,
-  Grouping,
-  Literal,
-  Logical,
-  Set as ExprSet,
-  Unary,
-  Variable as ExprVariable,
-  Visitor as ExprVisitor,
-} from "./Expr.js";
+import type * as Expr from "./Expr.js";
+import type * as Stmt from "./Stmt.js";
 
-import type {
-  Block,
-  Class,
-  Expression as StmtExpression,
-  Func,
-  If,
-  Print,
-  Return as StmtReturn,
-  Stmt,
-  Var as StmtVar,
-  Visitor as StmtVisitor,
-  While,
-} from "./Stmt.js";
-
-export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> {
+export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   readonly globals: Environment = new Environment();
   private environment: Environment = this.globals;
-  private readonly locals: Map<Expr, number> = new Map();
+  private readonly locals: Map<Expr.Expr, number> = new Map();
 
   constructor() {
     const Clock = class implements LoxCallable {
@@ -62,7 +36,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     this.globals.define("clock", new Clock());
   }
 
-  public interpret(statements: Stmt[]): void {
+  public interpret(statements: Stmt.Stmt[]): void {
     try {
       for (const statement of statements) this.execute(statement);
     } catch (error) {
@@ -71,7 +45,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     }
   }
 
-  public visitBinaryExpr(expr: Binary): any {
+  public visitBinaryExpr(expr: Expr.Binary): any {
     const left = this.evaluate(expr.left);
     const right = this.evaluate(expr.right);
 
@@ -120,7 +94,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     assert(false);
   }
 
-  public visitCallExpr(expr: Call): any {
+  public visitCallExpr(expr: Expr.Call): any {
     const callee = this.evaluate(expr.callee);
     const args = expr.args.map(this.evaluate.bind(this));
 
@@ -137,22 +111,22 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     return func.call(this, args);
   }
 
-  public visitGetExpr(expr: Get) {
+  public visitGetExpr(expr: Expr.Get) {
     const object = this.evaluate(expr.object);
 
     if (object instanceof LoxInstance) return object.get(expr.name);
     throw new RuntimeError(expr.name, "Only instances have properties.");
   }
 
-  public visitGroupingExpr(expr: Grouping): any {
+  public visitGroupingExpr(expr: Expr.Grouping): any {
     return this.evaluate(expr.expression);
   }
 
-  public visitLiteralExpr(expr: Literal): any {
+  public visitLiteralExpr(expr: Expr.Literal): any {
     return expr.value;
   }
 
-  public visitLogicalExpr(expr: Logical): any {
+  public visitLogicalExpr(expr: Expr.Logical): any {
     const left = this.evaluate(expr.left);
 
     if (expr.operator.type == TokenType.OR) {
@@ -164,7 +138,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     return this.evaluate(expr.right);
   }
 
-  public visitSetExpr(expr: ExprSet): any {
+  public visitSetExpr(expr: Expr.Set): any {
     const object = this.evaluate(expr.object);
     if (!(object instanceof LoxInstance)) throw new RuntimeError(expr.name, "Only instances have fields.");
 
@@ -174,7 +148,7 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     return value;
   }
 
-  public visitUnaryExpr(expr: Unary): any {
+  public visitUnaryExpr(expr: Expr.Unary): any {
     const right = this.evaluate(expr.right);
 
     switch (expr.operator.type) {
@@ -188,11 +162,11 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     assert(false);
   }
 
-  public visitVariableExpr(expr: ExprVariable): any {
+  public visitVariableExpr(expr: Expr.Variable): any {
     return this.lookUpVariable(expr.name, expr);
   }
 
-  private lookUpVariable(name: Token, expr: Expr): any {
+  private lookUpVariable(name: Token, expr: Expr.Expr): any {
     const distance = this.locals.get(expr);
 
     if (distance != null) return this.environment.getAt(distance, name.lexeme);
@@ -223,19 +197,19 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     return object.toString();
   }
 
-  private evaluate(expr: Expr): any {
+  private evaluate(expr: Expr.Expr): any {
     return expr.accept(this);
   }
 
-  private execute(stmt: Stmt): void {
+  private execute(stmt: Stmt.Stmt): void {
     stmt.accept(this);
   }
 
-  public resolve(expr: Expr, depth: number) {
+  public resolve(expr: Expr.Expr, depth: number) {
     this.locals.set(expr, depth);
   }
 
-  public executeBlock(statements: Stmt[], environment: Environment): void {
+  public executeBlock(statements: Stmt.Stmt[], environment: Environment): void {
     const previous = this.environment;
 
     try {
@@ -246,25 +220,25 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     }
   }
 
-  public visitBlockStmt(stmt: Block): void {
+  public visitBlockStmt(stmt: Stmt.Block): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
   }
 
-  public visitClassStmt(stmt: Class): void {
+  public visitClassStmt(stmt: Stmt.Class): void {
     this.environment.define(stmt.name.lexeme, null);
     this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme));
   }
 
-  public visitExpressionStmt(stmt: StmtExpression): void {
+  public visitExpressionStmt(stmt: Stmt.Expression): void {
     this.evaluate(stmt.expression);
   }
 
-  public visitFuncStmt(stmt: Func): void {
+  public visitFuncStmt(stmt: Stmt.Func): void {
     const func = new LoxFunction(stmt, this.environment);
     this.environment.define(stmt.name.lexeme, func);
   }
 
-  public visitIfStmt(stmt: If): void {
+  public visitIfStmt(stmt: Stmt.If): void {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.thenBranch);
     } else if (stmt.elseBranch != null) {
@@ -272,30 +246,30 @@ export default class Interpreter implements ExprVisitor<any>, StmtVisitor<void> 
     }
   }
 
-  public visitPrintStmt(stmt: Print): void {
+  public visitPrintStmt(stmt: Stmt.Print): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
   }
 
-  public visitReturnStmt(stmt: StmtReturn): void {
+  public visitReturnStmt(stmt: Stmt.Return): void {
     let value = null;
     if (stmt.value != null) value = this.evaluate(stmt.value);
 
     throw new Return(value);
   }
 
-  public visitVarStmt(stmt: StmtVar): void {
+  public visitVarStmt(stmt: Stmt.Var): void {
     let value = null;
     if (stmt.initializer != null) value = this.evaluate(stmt.initializer);
 
     this.environment.define(stmt.name.lexeme, value);
   }
 
-  public visitWhileStmt(stmt: While): void {
+  public visitWhileStmt(stmt: Stmt.While): void {
     while (this.isTruthy(this.evaluate(stmt.condition))) this.execute(stmt.body);
   }
 
-  public visitAssignExpr(expr: Assign) {
+  public visitAssignExpr(expr: Expr.Assign) {
     const value = this.evaluate(expr.value);
     const distance = this.locals.get(expr);
 

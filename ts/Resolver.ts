@@ -3,40 +3,15 @@ import Lox from "./Lox.js";
 import type Interpreter from "./Interpreter.js";
 import type { Token } from "./Token.js";
 
-import type {
-  Assign,
-  Binary,
-  Call,
-  Expr,
-  Get,
-  Grouping,
-  Logical,
-  Set as ExprSet,
-  Unary,
-  Variable as ExprVariable,
-  Visitor as ExprVisitor,
-} from "./Expr.js";
-
-import type {
-  Block,
-  Class,
-  Expression as StmtExpression,
-  Func,
-  If,
-  Print,
-  Return as StmtReturn,
-  Stmt,
-  Var as StmtVar,
-  Visitor as StmtVisitor,
-  While,
-} from "./Stmt.js";
+import type * as Expr from "./Expr.js";
+import type * as Stmt from "./Stmt.js";
 
 const enum FunctionType {
   NONE,
   FUNCTION,
 }
 
-export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
+export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
   private readonly interpreter: Interpreter;
   private readonly scopes: Map<string, boolean>[] = [];
   private currentFunction = FunctionType.NONE;
@@ -45,38 +20,38 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.interpreter = interpreter;
   }
 
-  public visitBlockStmt(stmt: Block): void {
+  public visitBlockStmt(stmt: Stmt.Block): void {
     this.beginScope();
     this.resolve(stmt.statements);
     this.endScope();
   }
 
-  public visitClassStmt(stmt: Class): void {
+  public visitClassStmt(stmt: Stmt.Class): void {
     this.declare(stmt.name);
     this.define(stmt.name);
   }
 
-  public visitExpressionStmt(stmt: StmtExpression): void {
+  public visitExpressionStmt(stmt: Stmt.Expression): void {
     this.resolve(stmt.expression);
   }
 
-  public visitFuncStmt(stmt: Func): void {
+  public visitFuncStmt(stmt: Stmt.Func): void {
     this.declare(stmt.name);
     this.define(stmt.name);
     this.resolveFunction(stmt, FunctionType.FUNCTION);
   }
 
-  public visitIfStmt(stmt: If): void {
+  public visitIfStmt(stmt: Stmt.If): void {
     this.resolve(stmt.condition);
     this.resolve(stmt.thenBranch);
     if (stmt.elseBranch != null) this.resolve(stmt.elseBranch);
   }
 
-  public visitPrintStmt(stmt: Print): void {
+  public visitPrintStmt(stmt: Stmt.Print): void {
     this.resolve(stmt.expression);
   }
 
-  public visitReturnStmt(stmt: StmtReturn): void {
+  public visitReturnStmt(stmt: Stmt.Return): void {
     if (this.currentFunction == FunctionType.NONE) {
       Lox.error(stmt.keyword, "Can't return from top-level code.");
     }
@@ -84,58 +59,58 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     if (stmt.value != null) this.resolve(stmt.value);
   }
 
-  public visitVarStmt(stmt: StmtVar): void {
+  public visitVarStmt(stmt: Stmt.Var): void {
     this.declare(stmt.name);
     if (stmt.initializer != null) this.resolve(stmt.initializer);
     this.define(stmt.name);
   }
 
-  public visitWhileStmt(stmt: While): void {
+  public visitWhileStmt(stmt: Stmt.While): void {
     this.resolve(stmt.condition);
     this.resolve(stmt.body);
   }
 
-  public visitAssignExpr(expr: Assign): void {
+  public visitAssignExpr(expr: Expr.Assign): void {
     this.resolve(expr.value);
     this.resolveLocal(expr, expr.name);
   }
 
-  public visitBinaryExpr(expr: Binary): void {
+  public visitBinaryExpr(expr: Expr.Binary): void {
     this.resolve(expr.left);
     this.resolve(expr.right);
   }
 
-  public visitCallExpr(expr: Call): void {
+  public visitCallExpr(expr: Expr.Call): void {
     this.resolve(expr.callee);
     for (const arg of expr.args) this.resolve(arg);
   }
 
-  public visitGetExpr(expr: Get): void {
+  public visitGetExpr(expr: Expr.Get): void {
     this.resolve(expr.object);
   }
 
-  public visitGroupingExpr(expr: Grouping): void {
+  public visitGroupingExpr(expr: Expr.Grouping): void {
     this.resolve(expr.expression);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public visitLiteralExpr(): void {}
 
-  public visitLogicalExpr(expr: Logical): void {
+  public visitLogicalExpr(expr: Expr.Logical): void {
     this.resolve(expr.left);
     this.resolve(expr.right);
   }
 
-  public visitSetExpr(expr: ExprSet): void {
+  public visitSetExpr(expr: Expr.Set): void {
     this.resolve(expr.value);
     this.resolve(expr.object);
   }
 
-  public visitUnaryExpr(expr: Unary): void {
+  public visitUnaryExpr(expr: Expr.Unary): void {
     this.resolve(expr.right);
   }
 
-  public visitVariableExpr(expr: ExprVariable): void {
+  public visitVariableExpr(expr: Expr.Variable): void {
     const scope = this.scopes[this.scopes.length - 1];
 
     if (scope && scope.get(expr.name.lexeme) === false) {
@@ -145,7 +120,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.resolveLocal(expr, expr.name);
   }
 
-  public resolve(arg: Expr | Stmt | Stmt[]): void {
+  public resolve(arg: Expr.Expr | Stmt.Stmt | Stmt.Stmt[]): void {
     if (Array.isArray(arg)) {
       for (const statement of arg) this.resolve(statement);
     } else {
@@ -153,7 +128,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
   }
 
-  private resolveFunction(func: Func, type: FunctionType): void {
+  private resolveFunction(func: Stmt.Func, type: FunctionType): void {
     const enclosingFunction = this.currentFunction;
     this.currentFunction = type;
     this.beginScope();
@@ -189,7 +164,7 @@ export default class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     if (scope) scope.set(name.lexeme, true);
   }
 
-  private resolveLocal(expr: Expr, name: Token): void {
+  private resolveLocal(expr: Expr.Expr, name: Token): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
       const scope = this.scopes[i];
 
