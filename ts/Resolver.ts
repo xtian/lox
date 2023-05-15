@@ -9,6 +9,7 @@ import type * as Stmt from "./Stmt.js";
 const enum FunctionType {
   NONE,
   FUNCTION,
+  METHOD,
 }
 
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
@@ -29,6 +30,8 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   public visitClassStmt(stmt: Stmt.Class): void {
     this.declare(stmt.name);
     this.define(stmt.name);
+
+    for (const method of stmt.methods) this.resolveFunction(method, FunctionType.METHOD);
   }
 
   public visitExpressionStmt(stmt: Stmt.Expression): void {

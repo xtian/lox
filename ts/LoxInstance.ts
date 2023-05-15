@@ -12,6 +12,10 @@ export default class LoxInstance {
 
   public get(name: Token): any {
     if (this.fields.has(name.lexeme)) return this.fields.get(name.lexeme);
+
+    const method = this.loxClass.findMethod(name.lexeme);
+    if (method != null) return method;
+
     throw new RuntimeError(name, `Undefined property '${name.lexeme}'.`);
   }
 

@@ -226,7 +226,14 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   public visitClassStmt(stmt: Stmt.Class): void {
     this.environment.define(stmt.name.lexeme, null);
-    this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme));
+
+    const methods = new Map();
+
+    for (const method of stmt.methods) {
+      methods.set(method.name.lexeme, new LoxFunction(method, this.environment));
+    }
+
+    this.environment.assign(stmt.name, new LoxClass(stmt.name.lexeme, methods));
   }
 
   public visitExpressionStmt(stmt: Stmt.Expression): void {
