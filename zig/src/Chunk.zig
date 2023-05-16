@@ -1,7 +1,6 @@
 const Allocator = @import("std").mem.Allocator;
 
 const ValueArray = @import("./ValueArray.zig");
-const Value = ValueArray.Value;
 const memory = @import("./memory.zig");
 
 pub const OpCode = enum(u8) {
@@ -42,7 +41,7 @@ pub fn write(self: *@This(), opcode: OpCode, line: usize) !void {
     self.count += 1;
 }
 
-pub fn addConstant(self: *@This(), value: Value) !u8 {
+pub fn addConstant(self: *@This(), value: ValueArray.Value) !u8 {
     try self.constants.write(value);
     return self.constants.count - 1;
 }
