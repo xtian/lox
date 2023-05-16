@@ -15,6 +15,12 @@ pub fn disassembleChunk(chunk: *Chunk, name: []const u8) void {
 pub fn disassembleInstruction(chunk: *Chunk, offset: usize) usize {
     print("{d:0>4} ", .{offset});
 
+    if (offset > 0 and chunk.lines[offset] == chunk.lines[offset - 1]) {
+        print("   | ", .{});
+    } else {
+        print("{d:4} ", .{chunk.lines[offset]});
+    }
+
     return switch (chunk.code[offset]) {
         .constant => constantInstruction("constant", chunk, offset),
         .ret => simpleInstruction("ret", offset),

@@ -13,9 +13,9 @@ pub fn main() !void {
     defer chunk.free();
 
     const constant = try chunk.addConstant(1.2);
-    try chunk.write(.constant);
-    try chunk.write(@intToEnum(OpCode, constant));
+    try chunk.write(.constant, 123);
+    try chunk.write(@intToEnum(OpCode, constant), 123);
 
-    try chunk.write(.ret);
+    try chunk.write(.ret, 123);
     debug.disassembleChunk(&chunk, "test chunk");
 }
