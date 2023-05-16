@@ -2,9 +2,16 @@ const std = @import("std");
 
 const Chunk = @import("./Chunk.zig");
 const OpCode = Chunk.OpCode;
+const VM = @import("./VM.zig");
 const debug = @import("./debug.zig");
 
+pub const debug_trace_execution = false;
+
+var vm = VM.init();
+
 pub fn main() !void {
+    defer vm.free();
+
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -17,5 +24,7 @@ pub fn main() !void {
     try chunk.write(@intToEnum(OpCode, constant), 123);
 
     try chunk.write(.ret, 123);
+
     debug.disassembleChunk(&chunk, "test chunk");
+    _ = vm.interpret(&chunk);
 }
