@@ -1,4 +1,4 @@
-const print = @import("std").debug.print;
+const std = @import("std");
 
 start: [*]const u8,
 current: [*]const u8,
@@ -72,6 +72,8 @@ pub fn scanToken(self: *@This()) Token {
     if (self.isAtEnd()) return self.makeToken(.eof);
 
     const byte = self.advance();
+
+    if (isAlpha(byte)) return self.identifier();
     if (isDigit(byte)) return self.number();
 
     return switch (byte) {
@@ -151,6 +153,48 @@ fn skipWhitespace(self: *@This()) void {
     }
 }
 
+fn checkKeyword(self: @This(), start: usize, rest: []const u8, tokenType: TokenType) TokenType {
+    const length = @ptrToInt(self.current) - @ptrToInt(self.start);
+
+    if (length == start + rest.len and
+        std.mem.eql(u8, self.start[start..rest.len], rest)) return tokenType;
+
+    return .identifier;
+}
+
+fn identifierType(self: @This()) TokenType {
+    return switch (self.start[0]) {
+        'a' => self.checkKeyword(1, "nd", .@"and"),
+        'c' => self.checkKeyword(1, "lass", .class),
+        'e' => self.checkKeyword(1, "else", .@"else"),
+        'f' => if (@ptrToInt(self.current) - @ptrToInt(self.start) > 1) switch (self.start[1]) {
+            'a' => self.checkKeyword(2, "lse", .false),
+            'o' => self.checkKeyword(2, "r", .@"for"),
+            'u' => self.checkKeyword(2, "n", .fun),
+            else => .identifier,
+        } else .identifier,
+        'i' => self.checkKeyword(1, "if", .@"if"),
+        'n' => self.checkKeyword(1, "il", .nil),
+        'o' => self.checkKeyword(1, "r", .@"or"),
+        'p' => self.checkKeyword(1, "rint", .print),
+        'r' => self.checkKeyword(1, "eturn", .@"return"),
+        's' => self.checkKeyword(1, "uper", .super),
+        't' => if (@ptrToInt(self.current) - @ptrToInt(self.start) > 1) switch (self.start[1]) {
+            'h' => self.checkKeyword(2, "is", .this),
+            'r' => self.checkKeyword(2, "ue", .true),
+            else => .identifier,
+        } else .identifier,
+        'v' => self.checkKeyword(1, "ar", .@"var"),
+        'w' => self.checkKeyword(1, "hile", .@"while"),
+        else => .identifier,
+    };
+}
+
+fn identifier(self: *@This()) Token {
+    while (isAlpha(self.peek()) or isDigit(self.peek())) _ = self.advance();
+    return self.makeToken(self.identifierType());
+}
+
 fn number(self: *@This()) Token {
     while (isDigit(self.peek())) _ = self.advance();
 
@@ -176,6 +220,12 @@ fn string(self: *@This()) Token {
     // The closing quote
     _ = self.advance();
     return self.makeToken(.string);
+}
+
+fn isAlpha(byte: u8) bool {
+    return (byte >= 'a' and byte <= 'z') or
+        (byte >= 'A' and byte <= 'Z') or
+        byte == '_';
 }
 
 fn isDigit(byte: u8) bool {
