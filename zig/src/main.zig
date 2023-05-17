@@ -1,44 +1,87 @@
 const std = @import("std");
+const print = std.debug.print;
 
 const Chunk = @import("./Chunk.zig");
 const OpCode = Chunk.OpCode;
 const VM = @import("./VM.zig");
+const compiler = @import("./compiler.zig");
 const debug = @import("./debug.zig");
 
 pub const debug_trace_execution = true;
 
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpa.allocator();
+
 var vm = VM{};
 
 pub fn main() !void {
+    defer _ = gpa.deinit();
+
     vm.init();
     defer vm.free();
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
 
-    var chunk = Chunk.init(allocator);
-    defer chunk.free();
+    switch (args.len) {
+        1 => try repl(),
+        2 => runFile(args[1]),
+        else => {
+            print("Usage: zlox [path]\n", .{});
+            std.os.exit(64);
+        },
+    }
+}
 
-    var constant = try chunk.addConstant(1.2);
-    try chunk.write(.constant, 123);
-    try chunk.write(@intToEnum(OpCode, constant), 123);
+fn repl() !void {
+    const max_line = 1024;
+    var buffer: [max_line]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&buffer);
+    const fba_allocator = fba.allocator();
+    const stdin = std.io.getStdIn().reader();
 
-    constant = try chunk.addConstant(3.4);
-    try chunk.write(.constant, 123);
-    try chunk.write(@intToEnum(OpCode, constant), 123);
+    while (true) {
+        defer fba.reset();
 
-    try chunk.write(.add, 123);
+        print("> ", .{});
+        const maybe_input = try stdin.readUntilDelimiterOrEofAlloc(fba_allocator, '\n', max_line);
 
-    constant = try chunk.addConstant(5.6);
-    try chunk.write(.constant, 123);
-    try chunk.write(@intToEnum(OpCode, constant), 123);
+        if (maybe_input) |input| {
+            _ = interpret(input);
+        } else {
+            print("\n", .{});
+            break;
+        }
+    }
+}
 
-    try chunk.write(.divide, 123);
-    try chunk.write(.negate, 123);
+fn runFile(path: []const u8) void {
+    const file = std.fs.cwd().openFile(path, .{}) catch {
+        print("Could not open file \"{s}\".\n", .{path});
+        std.os.exit(74);
+    };
 
-    try chunk.write(.ret, 123);
+    defer file.close();
 
-    debug.disassembleChunk(&chunk, "test chunk");
-    _ = vm.interpret(&chunk);
+    if (file.readToEndAlloc(allocator, std.math.maxInt(u32))) |source| {
+        switch (interpret(source)) {
+            .ok => {},
+            .compile_error => std.os.exit(65),
+            .runtime_error => std.os.exit(70),
+        }
+    } else |err| switch (err) {
+        error.OutOfMemory => {
+            print("Not enough memory to read \"{s}\".\n", .{path});
+            std.os.exit(74);
+        },
+        else => {
+            print("Coult not read file \"{s}\".\n", .{path});
+            std.os.exit(74);
+        },
+    }
+}
+
+fn interpret(source: []const u8) VM.Result {
+    compiler.compile(source);
+    return .ok;
 }
