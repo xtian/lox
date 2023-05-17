@@ -7,9 +7,10 @@ const debug = @import("./debug.zig");
 
 pub const debug_trace_execution = false;
 
-var vm = VM.init();
+var vm = VM{};
 
 pub fn main() !void {
+    vm.init();
     defer vm.free();
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
