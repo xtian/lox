@@ -59,6 +59,11 @@ fn run(self: *@This()) Result {
 
         switch (self.ip[0]) {
             .constant => self.push(self.readConstant()),
+            .add => self.binaryOp(.add),
+            .subtract => self.binaryOp(.subtract),
+            .multiply => self.binaryOp(.multiply),
+            .divide => self.binaryOp(.divide),
+            .negate => self.push(-self.pop()),
             .ret => {
                 ValueArray.printValue(self.pop());
                 print("\n", .{});
@@ -69,10 +74,24 @@ fn run(self: *@This()) Result {
     }
 }
 
+const BinaryOp = enum { add, subtract, multiply, divide };
+
+inline fn binaryOp(self: *@This(), comptime operator: BinaryOp) void {
+    const b = self.pop();
+    const a = self.pop();
+    const result = switch (operator) {
+        .add => a + b,
+        .subtract => a - b,
+        .multiply => a * b,
+        .divide => a / b,
+    };
+
+    self.push(result);
+}
+
 inline fn readConstant(self: *@This()) Value {
-    const constant = self.chunk.constants.values[@enumToInt(self.ip[0])];
     self.ip += 1;
-    return constant;
+    return self.chunk.constants.values[@enumToInt(self.ip[0])];
 }
 
 fn resetStack(self: *@This()) void {

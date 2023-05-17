@@ -5,7 +5,7 @@ const OpCode = Chunk.OpCode;
 const VM = @import("./VM.zig");
 const debug = @import("./debug.zig");
 
-pub const debug_trace_execution = false;
+pub const debug_trace_execution = true;
 
 var vm = VM{};
 
@@ -20,9 +20,22 @@ pub fn main() !void {
     var chunk = Chunk.init(allocator);
     defer chunk.free();
 
-    const constant = try chunk.addConstant(1.2);
+    var constant = try chunk.addConstant(1.2);
     try chunk.write(.constant, 123);
     try chunk.write(@intToEnum(OpCode, constant), 123);
+
+    constant = try chunk.addConstant(3.4);
+    try chunk.write(.constant, 123);
+    try chunk.write(@intToEnum(OpCode, constant), 123);
+
+    try chunk.write(.add, 123);
+
+    constant = try chunk.addConstant(5.6);
+    try chunk.write(.constant, 123);
+    try chunk.write(@intToEnum(OpCode, constant), 123);
+
+    try chunk.write(.divide, 123);
+    try chunk.write(.negate, 123);
 
     try chunk.write(.ret, 123);
 

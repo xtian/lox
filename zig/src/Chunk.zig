@@ -5,6 +5,11 @@ const memory = @import("./memory.zig");
 
 pub const OpCode = enum(u8) {
     constant,
+    add,
+    subtract,
+    multiply,
+    divide,
+    negate,
     ret,
     _,
 };

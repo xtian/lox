@@ -23,6 +23,11 @@ pub fn disassembleInstruction(chunk: *Chunk, offset: usize) usize {
 
     return switch (chunk.code[offset]) {
         .constant => constantInstruction("constant", chunk, offset),
+        .add => simpleInstruction("add", offset),
+        .subtract => simpleInstruction("subtract", offset),
+        .multiply => simpleInstruction("multiply", offset),
+        .divide => simpleInstruction("divide", offset),
+        .negate => simpleInstruction("negate", offset),
         .ret => simpleInstruction("ret", offset),
         else => |instruction| {
             print("Unknown opcode {d}\n", .{instruction});
