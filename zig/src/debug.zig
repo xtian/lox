@@ -28,7 +28,7 @@ pub fn disassembleInstruction(chunk: *Chunk, offset: usize) usize {
         .multiply => simpleInstruction("multiply", offset),
         .divide => simpleInstruction("divide", offset),
         .negate => simpleInstruction("negate", offset),
-        .ret => simpleInstruction("ret", offset),
+        .@"return" => simpleInstruction("return", offset),
         else => |instruction| {
             print("Unknown opcode {d}\n", .{instruction});
             return offset + 1;

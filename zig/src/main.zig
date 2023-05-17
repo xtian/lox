@@ -63,7 +63,9 @@ fn runFile(path: []const u8) void {
 
     defer file.close();
 
-    if (file.readToEndAlloc(allocator, std.math.maxInt(u32))) |source| {
+    if (file.readToEndAllocOptions(allocator, std.math.maxInt(u32), null, @alignOf(u8), 0)) |source| {
+        defer allocator.free(source);
+
         switch (interpret(source)) {
             .ok => {},
             .compile_error => std.os.exit(65),
@@ -75,7 +77,7 @@ fn runFile(path: []const u8) void {
             std.os.exit(74);
         },
         else => {
-            print("Coult not read file \"{s}\".\n", .{path});
+            print("Could not read file \"{s}\".\n", .{path});
             std.os.exit(74);
         },
     }

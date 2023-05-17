@@ -64,7 +64,7 @@ fn run(self: *@This()) Result {
             .multiply => self.binaryOp(.multiply),
             .divide => self.binaryOp(.divide),
             .negate => self.push(-self.pop()),
-            .ret => {
+            .@"return" => {
                 ValueArray.printValue(self.pop());
                 print("\n", .{});
                 return .ok;
